@@ -35,56 +35,56 @@ public class BizTransferRecord implements Serializable {
 	/**主键*/
 	@TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "主键")
-    private String id;
+    private java.lang.String id;
 	/**创建人*/
     @ApiModelProperty(value = "创建人")
-    private String createBy;
+    private java.lang.String createBy;
 	/**创建日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建日期")
-    private Date createTime;
+    private java.util.Date createTime;
 	/**更新人*/
     @ApiModelProperty(value = "更新人")
-    private String updateBy;
+    private java.lang.String updateBy;
 	/**更新日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "更新日期")
-    private Date updateTime;
+    private java.util.Date updateTime;
 	/**所属部门*/
     @ApiModelProperty(value = "所属部门")
-    private String sysOrgCode;
+    private java.lang.String sysOrgCode;
 	/**客户号码*/
 	@Excel(name = "客户号码", width = 15)
     @ApiModelProperty(value = "客户号码")
-    private String phoneNum;
+    private java.lang.String phoneNum;
 	/**运单号*/
 	@Excel(name = "运单号", width = 15)
     @ApiModelProperty(value = "运单号")
-    private String transferNum;
+    private java.lang.String transferNum;
 	/**生成运单时间*/
 	@Excel(name = "生成运单时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "生成运单时间")
-    private Date transferCreateTime;
+    private java.util.Date transferCreateTime;
 	/**签收时间*/
 	@Excel(name = "签收时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "签收时间")
-    private Date signTime;
+    private java.util.Date signTime;
 	/**运单状态*/
 	@Excel(name = "运单状态", width = 15)
     @ApiModelProperty(value = "运单状态")
-    private String transferStatus;
+    private java.lang.String transferStatus;
 	/**实收金额*/
 	@Excel(name = "实收金额", width = 15)
     @ApiModelProperty(value = "实收金额")
-    private Double price;
+    private java.lang.Double price;
 	/**快递公司-字典项*/
 	@Excel(name = "快递公司-字典项", width = 15)
     @ApiModelProperty(value = "快递公司-字典项")
-    private String transferComp;
+    private java.lang.String transferComp;
 }

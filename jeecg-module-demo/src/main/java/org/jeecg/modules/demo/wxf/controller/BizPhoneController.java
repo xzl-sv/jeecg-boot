@@ -40,7 +40,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
  /**
  * @Description: 号码资源表
  * @Author: jeecg-boot
- * @Date:   2024-02-28
+ * @Date:   2024-02-29
  * @Version: V1.0
  */
 @Api(tags="号码资源表")

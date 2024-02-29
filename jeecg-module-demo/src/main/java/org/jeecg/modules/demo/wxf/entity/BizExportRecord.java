@@ -35,42 +35,42 @@ public class BizExportRecord implements Serializable {
 	/**主键*/
 	@TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "主键")
-    private String id;
+    private java.lang.String id;
 	/**创建人*/
     @ApiModelProperty(value = "创建人")
-    private String createBy;
+    private java.lang.String createBy;
 	/**创建日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建日期")
-    private Date createTime;
+    private java.util.Date createTime;
 	/**更新人*/
     @ApiModelProperty(value = "更新人")
-    private String updateBy;
+    private java.lang.String updateBy;
 	/**更新日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "更新日期")
-    private Date updateTime;
+    private java.util.Date updateTime;
 	/**所属部门*/
     @ApiModelProperty(value = "所属部门")
-    private String sysOrgCode;
+    private java.lang.String sysOrgCode;
 	/**提取时间*/
 	@Excel(name = "提取时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "提取时间")
-    private Date exportTime;
+    private java.util.Date exportTime;
 	/**数量*/
 	@Excel(name = "数量", width = 15)
     @ApiModelProperty(value = "数量")
-    private Integer size;
+    private java.lang.Integer size;
 	/**文件地址*/
 	@Excel(name = "文件地址", width = 15)
     @ApiModelProperty(value = "文件地址")
-    private String fileAddress;
+    private java.lang.String fileAddress;
 	/**提取规则描述*/
 	@Excel(name = "提取规则描述", width = 15)
     @ApiModelProperty(value = "提取规则描述")
-    private String exportRule;
+    private java.lang.String exportRule;
 }

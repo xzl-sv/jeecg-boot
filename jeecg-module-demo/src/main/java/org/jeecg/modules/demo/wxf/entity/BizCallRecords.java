@@ -35,70 +35,70 @@ public class BizCallRecords implements Serializable {
 	/**主键*/
 	@TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "主键")
-    private String id;
+    private java.lang.String id;
 	/**创建人*/
     @ApiModelProperty(value = "创建人")
-    private String createBy;
+    private java.lang.String createBy;
 	/**创建日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建日期")
-    private Date createTime;
+    private java.util.Date createTime;
 	/**更新人*/
     @ApiModelProperty(value = "更新人")
-    private String updateBy;
+    private java.lang.String updateBy;
 	/**更新日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "更新日期")
-    private Date updateTime;
+    private java.util.Date updateTime;
 	/**所属部门*/
     @ApiModelProperty(value = "所属部门")
-    private String sysOrgCode;
+    private java.lang.String sysOrgCode;
 	/**开始时间*/
 	@Excel(name = "开始时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "开始时间")
-    private Date callTime;
+    private java.util.Date callTime;
 	/**通话时长-秒*/
 	@Excel(name = "通话时长-秒", width = 15)
     @ApiModelProperty(value = "通话时长-秒")
-    private Integer callDuration;
+    private java.lang.Integer callDuration;
 	/**录音地址*/
 	@Excel(name = "录音地址", width = 15)
     @ApiModelProperty(value = "录音地址")
-    private String recordingAddress;
+    private java.lang.String recordingAddress;
 	/**是否拉黑y-n*/
 	@Excel(name = "是否拉黑y-n", width = 15)
     @ApiModelProperty(value = "是否拉黑y-n")
-    private String blackFlag;
+    private java.lang.String blackFlag;
 	/**性别*/
 	@Excel(name = "性别", width = 15)
     @ApiModelProperty(value = "性别")
-    private String gender;
+    private java.lang.String gender;
 	/**坐席工号*/
 	@Excel(name = "坐席工号", width = 15)
     @ApiModelProperty(value = "坐席工号")
-    private String seatsNum;
+    private java.lang.String seatsNum;
 	/**坐席姓名*/
 	@Excel(name = "坐席姓名", width = 15)
     @ApiModelProperty(value = "坐席姓名")
-    private String seatsName;
+    private java.lang.String seatsName;
 	/**客户姓名*/
 	@Excel(name = "客户姓名", width = 15)
     @ApiModelProperty(value = "客户姓名")
-    private String clientName;
+    private java.lang.String clientName;
 	/**客户地址*/
 	@Excel(name = "客户地址", width = 15)
     @ApiModelProperty(value = "客户地址")
-    private String clientAddress;
+    private java.lang.String clientAddress;
 	/**金额、价格*/
 	@Excel(name = "金额、价格", width = 15)
     @ApiModelProperty(value = "金额、价格")
-    private Double price;
+    private java.lang.Double price;
 	/**任务名称*/
 	@Excel(name = "任务名称", width = 15)
     @ApiModelProperty(value = "任务名称")
-    private String jobName;
+    private java.lang.String jobName;
 }
