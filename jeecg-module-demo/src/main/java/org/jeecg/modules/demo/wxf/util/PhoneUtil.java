@@ -10,9 +10,12 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 号码来源：phone-qqzeng-202402-507481.xlsx
@@ -31,6 +34,18 @@ public class PhoneUtil {
      *  是否初始化标记
      */
     private static boolean initFlag = false;
+
+
+    /**
+     * 正则表达式匹配手机号码的模式
+     *
+     */
+    private static String patternStr = "(13\\d|14\\d||15\\d|16\\d|17\\d|18\\d|19\\d)\\d{8}";
+
+    /**
+     * 编译正则表达式
+     */
+    private static Pattern pattern = Pattern.compile(patternStr);
 
     public static  Map<String,BizUtilPhone> f(){
         try {
@@ -94,4 +109,19 @@ public class PhoneUtil {
         }
 
     }
+
+    /**
+     * 从字符串中提取有效的手机号码，如果无效的话，返回null
+     * @param s
+     */
+    public static String detectPhone(String s){
+        Matcher matcher = pattern.matcher(s);
+        while(matcher.find()){
+            final String phoneNum = matcher.group();
+            return phoneNum;
+        }
+        return null;
+    }
+
+
 }
