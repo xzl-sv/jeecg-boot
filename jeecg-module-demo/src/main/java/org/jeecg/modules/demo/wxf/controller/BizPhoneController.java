@@ -1,6 +1,7 @@
 package org.jeecg.modules.demo.wxf.controller;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -9,9 +10,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.ss.formula.functions.T;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.demo.wxf.dto.ImportSummary;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 
@@ -20,6 +25,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.util.PhoneUtil;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -172,7 +178,88 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
     @RequiresPermissions("wxf:biz_phone:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
-        return super.importExcel(request, response, BizPhone.class);
+        return this.importExcel(request, response, BizPhone.class,customImportExcelFilter());
     }
 
-}
+
+	 /**
+	  * 通过excel导入数据
+	  *
+	  * @param request
+	  * @param response
+	  * @param clazz
+	  * @return
+	  */
+	 @Override
+	 protected Result<?> importExcel(HttpServletRequest request, HttpServletResponse response, Class<BizPhone> clazz) {
+		 MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+		 Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
+		 for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
+			 // 获取上传文件对象
+			 MultipartFile file = entity.getValue();
+			 ImportParams params = new ImportParams();
+			 params.setTitleRows(2);
+			 params.setHeadRows(1);
+			 params.setNeedSave(true);
+			 try {
+				 List<T> list = ExcelImportUtil.importExcel(file.getInputStream(), clazz, params);
+				 //update-begin-author:taoyan date:20190528 for:批量插入数据
+				 final List listAfterFilter = customImportExcelFilter().doFilter(list);
+				 long start = System.currentTimeMillis();
+				 service.saveBatch(listAfterFilter);
+				 //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
+				 //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
+				 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
+				 //update-end-author:taoyan date:20190528 for:批量插入数据
+				 return Result.ok("文件导入成功！数据行数：" + list.size()+" 过滤后行数:"+listAfterFilter.size());
+			 } catch (Exception e) {
+				 //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
+				 String msg = e.getMessage();
+				 log.error(msg, e);
+				 if(msg!=null && msg.indexOf("Duplicate entry")>=0){
+					 return Result.error("文件导入失败:有重复数据！");
+				 }else{
+					 return Result.error("文件导入失败:" + e.getMessage());
+				 }
+				 //update-end-author:taoyan date:20211124 for: 导入数据重复增加提示
+			 } finally {
+				 try {
+					 file.getInputStream().close();
+				 } catch (IOException e) {
+					 e.printStackTrace();
+				 }
+			 }
+		 }
+		 return Result.error("文件导入失败！");
+	 }
+
+	 @Override
+	 public ImportExcelFilter customImportExcelFilter() {
+
+		 ImportSummary importSummary;
+		 return new ImportExcelFilter<BizPhone>() {
+			 /**
+			  * 默认返回excel解析之后的全部数据。
+			  *
+			  * @param list
+			  * @return
+			  */
+			 @Override
+			 public List<BizPhone> doFilter(List<BizPhone> list) {
+				 final Iterator<BizPhone> iterator = list.iterator();
+				 while (iterator.hasNext()){
+					 final BizPhone p = iterator.next();
+ 					 final String validPhone = PhoneUtil.detectPhone(p.getPhone());
+					 if(validPhone!=null){
+						 p.setPhone(validPhone);
+						 PhoneUtil.fillPhoneArea(p);
+					 }else{
+						 iterator.remove();
+					 }
+
+				 }
+				 return ImportExcelFilter.super.doFilter(list);
+			 }
+		 };
+	 }
+ }

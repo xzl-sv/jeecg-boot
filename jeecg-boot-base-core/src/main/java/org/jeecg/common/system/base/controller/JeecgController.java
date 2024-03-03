@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
@@ -161,6 +163,10 @@ public class JeecgController<T, S extends IService<T>> {
      * @return
      */
     protected Result<?> importExcel(HttpServletRequest request, HttpServletResponse response, Class<T> clazz) {
+        return importExcel(request,response,clazz,customImportExcelFilter());
+    }
+
+    protected Result<?> importExcel(HttpServletRequest request, HttpServletResponse response, Class<T> clazz,ImportExcelFilter importExcelFilter) {
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
         Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
         for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
@@ -173,13 +179,14 @@ public class JeecgController<T, S extends IService<T>> {
             try {
                 List<T> list = ExcelImportUtil.importExcel(file.getInputStream(), clazz, params);
                 //update-begin-author:taoyan date:20190528 for:批量插入数据
+                final List listAfterFilter = importExcelFilter.doFilter(list);
                 long start = System.currentTimeMillis();
-                service.saveBatch(list);
+                service.saveBatch(listAfterFilter);
                 //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
                 //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //update-end-author:taoyan date:20190528 for:批量插入数据
-                return Result.ok("文件导入成功！数据行数：" + list.size());
+                return Result.ok("文件导入成功！数据行数：" + list.size()+" 过滤后行数:"+listAfterFilter.size());
             } catch (Exception e) {
                 //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
                 String msg = e.getMessage();
@@ -199,5 +206,11 @@ public class JeecgController<T, S extends IService<T>> {
             }
         }
         return Result.error("文件导入失败！");
+    }
+
+    public ImportExcelFilter customImportExcelFilter(){
+    return  new ImportExcelFilter<T>(){
+
+    };
     }
 }

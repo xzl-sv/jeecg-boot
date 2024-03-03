@@ -2,6 +2,7 @@ package org.jeecg.modules.demo.wxf.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import org.jeecg.modules.demo.wxf.entity.BizUtilPhone;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.entity.ImportParams;
@@ -40,7 +41,7 @@ public class PhoneUtil {
      * 正则表达式匹配手机号码的模式
      *
      */
-    private static String patternStr = "(13\\d|14\\d||15\\d|16\\d|17\\d|18\\d|19\\d)\\d{8}";
+    private static String patternStr = "(13\\d|14\\d|15\\d|16\\d|17\\d|18\\d|19\\d)+\\d{8}";
 
     /**
      * 编译正则表达式
@@ -69,6 +70,28 @@ public class PhoneUtil {
         }
         phone = phone.trim().substring(0,7);
         return phoneMap.get(phone)==null?new BizUtilPhone():phoneMap.get(phone);
+    }
+
+
+    /**
+     * 查找号段的所属地，查不到返回空白对象(非null)
+     * @param phone 大于等于7，截取前面7位
+     * @return
+     */
+    public static void fillPhoneArea(BizPhone phone){
+        init();
+        if(StringUtils.isBlank(phone.getPhone()) || phone.getPhone().trim().length()<7){
+            return ;
+        }
+        String phonePre = phone.getPhone().trim().substring(0,7);
+        final BizUtilPhone bizUtilPhone = phoneMap.get(phonePre) == null ? new BizUtilPhone() : phoneMap.get(phonePre);
+        final String areaCode = bizUtilPhone.getAreaCode();
+        if(areaCode==null){
+            return;
+        }
+
+        final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
+        phone.setProvinceCode(areaCode==null?"": sb.toString());
     }
 
 
@@ -122,6 +145,7 @@ public class PhoneUtil {
         }
         return null;
     }
+
 
 
 }
