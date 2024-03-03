@@ -11,11 +11,11 @@ import java.util.List;
 public interface ImportExcelFilter<T> {
     /**
      * 默认返回excel解析之后的全部数据。
+     * 注意：直接移除了list中的元素。如果需要记录原始数量，需要先获取数据
      * @param list
      * @return
      */
-    default  List<T> doFilter(List<T> list){
-        return list;
-    }
+    default void doFilter(List<T> list){
 
+    }
 }

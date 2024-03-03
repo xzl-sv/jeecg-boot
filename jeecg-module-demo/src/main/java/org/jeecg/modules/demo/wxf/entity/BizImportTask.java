@@ -19,16 +19,16 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 /**
- * @Description: biz_import_task
+ * @Description: 导入任务表
  * @Author: jeecg-boot
- * @Date:   2024-03-02
+ * @Date:   2024-03-03
  * @Version: V1.0
  */
 @Data
 @TableName("biz_import_task")
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="biz_import_task对象", description="biz_import_task")
+@ApiModel(value="biz_import_task对象", description="导入任务表")
 public class BizImportTask implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -56,4 +56,12 @@ public class BizImportTask implements Serializable {
 	@Excel(name = "taskSummary", width = 15)
     @ApiModelProperty(value = "taskSummary")
     private java.lang.String taskSummary;
+	/**任务类型*/
+	@Excel(name = "任务类型", width = 15)
+    @ApiModelProperty(value = "任务类型")
+    private java.lang.String taskType;
+	/**批次号*/
+	@Excel(name = "批次号", width = 15)
+    @ApiModelProperty(value = "批次号")
+    private java.lang.String batchNo;
 }

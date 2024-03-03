@@ -179,14 +179,14 @@ public class JeecgController<T, S extends IService<T>> {
             try {
                 List<T> list = ExcelImportUtil.importExcel(file.getInputStream(), clazz, params);
                 //update-begin-author:taoyan date:20190528 for:批量插入数据
-                final List listAfterFilter = importExcelFilter.doFilter(list);
+                importExcelFilter.doFilter(list);
                 long start = System.currentTimeMillis();
-                service.saveBatch(listAfterFilter);
+                service.saveBatch(list);
                 //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
                 //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //update-end-author:taoyan date:20190528 for:批量插入数据
-                return Result.ok("文件导入成功！数据行数：" + list.size()+" 过滤后行数:"+listAfterFilter.size());
+                return Result.ok("文件导入成功！数据行数：" + list.size()+" 过滤后行数:"+list.size());
             } catch (Exception e) {
                 //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
                 String msg = e.getMessage();

@@ -38,12 +38,12 @@ import org.jeecg.common.aspect.annotation.AutoLog;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
  /**
- * @Description: biz_import_task
+ * @Description: 导入任务表
  * @Author: jeecg-boot
- * @Date:   2024-03-02
+ * @Date:   2024-03-03
  * @Version: V1.0
  */
-@Api(tags="biz_import_task")
+@Api(tags="导入任务表")
 @RestController
 @RequestMapping("/wxf/bizImportTask")
 @Slf4j
@@ -60,8 +60,8 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
 	 * @param req
 	 * @return
 	 */
-	//@AutoLog(value = "biz_import_task-分页列表查询")
-	@ApiOperation(value="biz_import_task-分页列表查询", notes="biz_import_task-分页列表查询")
+	//@AutoLog(value = "导入任务表-分页列表查询")
+	@ApiOperation(value="导入任务表-分页列表查询", notes="导入任务表-分页列表查询")
 	@GetMapping(value = "/list")
 	public Result<IPage<BizImportTask>> queryPageList(BizImportTask bizImportTask,
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
@@ -79,8 +79,8 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
 	 * @param bizImportTask
 	 * @return
 	 */
-	@AutoLog(value = "biz_import_task-添加")
-	@ApiOperation(value="biz_import_task-添加", notes="biz_import_task-添加")
+	@AutoLog(value = "导入任务表-添加")
+	@ApiOperation(value="导入任务表-添加", notes="导入任务表-添加")
 	@RequiresPermissions("wxf:biz_import_task:add")
 	@PostMapping(value = "/add")
 	public Result<String> add(@RequestBody BizImportTask bizImportTask) {
@@ -94,8 +94,8 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
 	 * @param bizImportTask
 	 * @return
 	 */
-	@AutoLog(value = "biz_import_task-编辑")
-	@ApiOperation(value="biz_import_task-编辑", notes="biz_import_task-编辑")
+	@AutoLog(value = "导入任务表-编辑")
+	@ApiOperation(value="导入任务表-编辑", notes="导入任务表-编辑")
 	@RequiresPermissions("wxf:biz_import_task:edit")
 	@RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
 	public Result<String> edit(@RequestBody BizImportTask bizImportTask) {
@@ -109,8 +109,8 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
 	 * @param id
 	 * @return
 	 */
-	@AutoLog(value = "biz_import_task-通过id删除")
-	@ApiOperation(value="biz_import_task-通过id删除", notes="biz_import_task-通过id删除")
+	@AutoLog(value = "导入任务表-通过id删除")
+	@ApiOperation(value="导入任务表-通过id删除", notes="导入任务表-通过id删除")
 	@RequiresPermissions("wxf:biz_import_task:delete")
 	@DeleteMapping(value = "/delete")
 	public Result<String> delete(@RequestParam(name="id",required=true) String id) {
@@ -124,8 +124,8 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
 	 * @param ids
 	 * @return
 	 */
-	@AutoLog(value = "biz_import_task-批量删除")
-	@ApiOperation(value="biz_import_task-批量删除", notes="biz_import_task-批量删除")
+	@AutoLog(value = "导入任务表-批量删除")
+	@ApiOperation(value="导入任务表-批量删除", notes="导入任务表-批量删除")
 	@RequiresPermissions("wxf:biz_import_task:deleteBatch")
 	@DeleteMapping(value = "/deleteBatch")
 	public Result<String> deleteBatch(@RequestParam(name="ids",required=true) String ids) {
@@ -139,8 +139,8 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
 	 * @param id
 	 * @return
 	 */
-	//@AutoLog(value = "biz_import_task-通过id查询")
-	@ApiOperation(value="biz_import_task-通过id查询", notes="biz_import_task-通过id查询")
+	//@AutoLog(value = "导入任务表-通过id查询")
+	@ApiOperation(value="导入任务表-通过id查询", notes="导入任务表-通过id查询")
 	@GetMapping(value = "/queryById")
 	public Result<BizImportTask> queryById(@RequestParam(name="id",required=true) String id) {
 		BizImportTask bizImportTask = bizImportTaskService.getById(id);
@@ -159,7 +159,7 @@ public class BizImportTaskController extends JeecgController<BizImportTask, IBiz
     @RequiresPermissions("wxf:biz_import_task:exportXls")
     @RequestMapping(value = "/exportXls")
     public ModelAndView exportXls(HttpServletRequest request, BizImportTask bizImportTask) {
-        return super.exportXls(request, bizImportTask, BizImportTask.class, "biz_import_task");
+        return super.exportXls(request, bizImportTask, BizImportTask.class, "导入任务表");
     }
 
     /**

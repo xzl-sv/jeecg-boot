@@ -2,6 +2,7 @@ package org.jeecg.modules.demo.wxf.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import org.jeecg.modules.demo.wxf.entity.BizUtilPhone;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
@@ -94,6 +95,27 @@ public class PhoneUtil {
         phone.setProvinceCode(areaCode==null?"": sb.toString());
     }
 
+    /**
+     * 查找号段的所属地，查不到返回空白对象(非null)
+     * @param phone 大于等于7，截取前面7位
+     * @return
+     */
+    public static void fillPhoneArea(BizMidImport phone){
+        init();
+        if(StringUtils.isBlank(phone.getPhone()) || phone.getPhone().trim().length()<7){
+            return ;
+        }
+        String phonePre = phone.getPhone().trim().substring(0,7);
+        final BizUtilPhone bizUtilPhone = phoneMap.get(phonePre) == null ? new BizUtilPhone() : phoneMap.get(phonePre);
+        final String areaCode = bizUtilPhone.getAreaCode();
+        if(areaCode==null){
+            return;
+        }
+
+        final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
+        phone.setProvinceCode(areaCode==null?"": sb.toString());
+    }
+
 
     /**
      * 初始化
@@ -138,6 +160,7 @@ public class PhoneUtil {
      * @param s
      */
     public static String detectPhone(String s){
+        if(s==null)return null;
         Matcher matcher = pattern.matcher(s);
         while(matcher.find()){
             final String phoneNum = matcher.group();

@@ -10,10 +10,40 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 /**
  * @Description: 导入中间表
  * @Author: jeecg-boot
- * @Date:   2024-03-02
+ * @Date:   2024-03-03
  * @Version: V1.0
  */
 @Service
 public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, BizMidImport> implements IBizMidImportService {
 
+    @Override
+    public void truncateTable(){
+        this.baseMapper.truncateTable();
+    }
+
+
+    /**
+     * 查询excel中数据有多少在表里已经存在
+     * @return
+     */
+    @Override
+    public Integer phoneExistInDb(){
+        return this.baseMapper.phoneExistInDb();
+    }
+
+    /**
+     * 有价值的号码数量。原来表里面不存在.
+     * 插入的数量应该也是这么多
+     * valid的数量
+     * @return
+     */
+    @Override
+    public Integer phoneValueNum(){
+        return this.baseMapper.phoneValueNum();
+    }
+
+    @Override
+    public void insertPhoneFromMidImport(){
+        this.baseMapper.insertPhoneFromMidImport();
+    }
 }

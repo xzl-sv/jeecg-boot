@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 /**
  * @Description: 导入中间表
  * @Author: jeecg-boot
- * @Date:   2024-03-02
+ * @Date:   2024-03-03
  * @Version: V1.0
  */
 @Data
@@ -36,9 +36,9 @@ public class BizMidImport implements Serializable {
 	@TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "id")
     private java.lang.String id;
-	/**客户号码*/
-	@Excel(name = "客户号码", width = 15)
-    @ApiModelProperty(value = "客户号码")
+	/**客户名称*/
+	@Excel(name = "客户名称", width = 15)
+    @ApiModelProperty(value = "客户名称")
     private java.lang.String clientName;
 	/**地址*/
 	@Excel(name = "地址", width = 15)
@@ -70,8 +70,8 @@ public class BizMidImport implements Serializable {
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "lastExportTime")
     private java.util.Date lastExportTime;
-	/**phone*/
-	@Excel(name = "phone", width = 15)
-    @ApiModelProperty(value = "phone")
+	/**客户号码*/
+	@Excel(name = "客户号码", width = 15)
+    @ApiModelProperty(value = "客户号码")
     private java.lang.String phone;
 }

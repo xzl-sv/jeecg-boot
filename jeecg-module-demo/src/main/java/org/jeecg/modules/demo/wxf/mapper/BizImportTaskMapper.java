@@ -7,9 +7,9 @@ import org.jeecg.modules.demo.wxf.entity.BizImportTask;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
- * @Description: biz_import_task
+ * @Description: 导入任务表
  * @Author: jeecg-boot
- * @Date:   2024-03-02
+ * @Date:   2024-03-03
  * @Version: V1.0
  */
 public interface BizImportTaskMapper extends BaseMapper<BizImportTask> {

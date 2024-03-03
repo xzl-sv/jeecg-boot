@@ -1,8 +1,11 @@
 package org.jeecg.modules.demo.wxf.dto;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import java.util.Date;
 
 /**
  * @author: create by qianshihua
@@ -33,6 +36,22 @@ public class ImportSummary {
      * 非法数据（不包含库里已有的重复号码）
      */
     private Integer invalidNotDup=0;
+
+    /**
+     * 任务开始时间
+     */
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
+
+    private Date beginTime;
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
+
+    private Date endTime;
+
+    /**
+     * 任务日志信息.字数上限1000
+     */
+    private String msg;
+
 
     public ImportSummary valid(int i){
         valid+=i;
