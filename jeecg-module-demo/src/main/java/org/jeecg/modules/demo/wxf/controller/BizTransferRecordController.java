@@ -12,7 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.entity.BizTransferRecord;
+import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 import org.jeecg.modules.demo.wxf.service.IBizTransferRecordService;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -48,7 +50,12 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 @RequestMapping("/wxf/bizTransferRecord")
 @Slf4j
 public class BizTransferRecordController extends JeecgController<BizTransferRecord, IBizTransferRecordService> {
-	@Autowired
+
+	 @Autowired
+	 private IBizPhoneService bizPhoneService;
+
+
+	 @Autowired
 	private IBizTransferRecordService bizTransferRecordService;
 	
 	/**
@@ -172,7 +179,7 @@ public class BizTransferRecordController extends JeecgController<BizTransferReco
     @RequiresPermissions("wxf:biz_transfer_record:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
-        return super.importExcel(request, response, BizTransferRecord.class);
+		return bizPhoneService.importExcelee(request, response, BizTransferRecord.class);
     }
 
 }

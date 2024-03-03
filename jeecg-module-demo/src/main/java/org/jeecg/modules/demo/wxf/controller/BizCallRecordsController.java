@@ -13,6 +13,7 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.demo.wxf.entity.BizCallRecords;
+import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.service.IBizCallRecordsService;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -20,6 +21,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -50,6 +52,9 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 public class BizCallRecordsController extends JeecgController<BizCallRecords, IBizCallRecordsService> {
 	@Autowired
 	private IBizCallRecordsService bizCallRecordsService;
+
+	 @Autowired
+	 private IBizPhoneService bizPhoneService;
 	
 	/**
 	 * 分页列表查询
@@ -172,7 +177,7 @@ public class BizCallRecordsController extends JeecgController<BizCallRecords, IB
     @RequiresPermissions("wxf:biz_call_records:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
-        return super.importExcel(request, response, BizCallRecords.class);
+		return bizPhoneService.importExcelee(request, response, BizCallRecords.class);
     }
 
 }

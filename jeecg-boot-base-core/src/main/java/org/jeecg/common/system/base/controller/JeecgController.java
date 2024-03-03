@@ -213,4 +213,5 @@ public class JeecgController<T, S extends IService<T>> {
 
     };
     }
+
 }

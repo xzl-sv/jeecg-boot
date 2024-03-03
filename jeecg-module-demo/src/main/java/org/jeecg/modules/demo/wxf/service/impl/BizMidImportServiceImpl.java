@@ -6,6 +6,7 @@ import org.jeecg.modules.demo.wxf.service.IBizMidImportService;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @Description: 导入中间表
@@ -17,6 +18,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, BizMidImport> implements IBizMidImportService {
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void truncateTable(){
         this.baseMapper.truncateTable();
     }
@@ -27,6 +29,7 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer phoneExistInDb(){
         return this.baseMapper.phoneExistInDb();
     }
@@ -38,11 +41,13 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Integer phoneValueNum(){
         return this.baseMapper.phoneValueNum();
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void insertPhoneFromMidImport(){
         this.baseMapper.insertPhoneFromMidImport();
     }

@@ -22,5 +22,5 @@ public interface IBizPhoneService extends IService<BizPhone> {
      * @param response
      * @return
      */
-    Result<?> importExcelee(HttpServletRequest request, HttpServletResponse response);
+    Result<?> importExcelee(HttpServletRequest request, HttpServletResponse response,Class clazz);
 }

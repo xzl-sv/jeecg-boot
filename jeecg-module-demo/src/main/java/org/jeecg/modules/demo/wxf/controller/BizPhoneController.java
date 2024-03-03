@@ -179,7 +179,7 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
     @RequiresPermissions("wxf:biz_phone:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
-        return bizPhoneService.importExcelee(request, response);
+        return bizPhoneService.importExcelee(request, response,BizMidImport.class);
     }
 
 
