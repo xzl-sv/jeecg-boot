@@ -300,7 +300,10 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     }
 
 
-
+    /**
+     * 执行导入通话记录
+     * @param importTask
+     */
     public void doimportCallRecord(BizImportTask importTask) {
 
         final String batchno = importTask.getBatchNo();
@@ -331,8 +334,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 long start = System.currentTimeMillis();
                 callRecordsService.saveBatch(list);
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
-                //update-end-author:taoyan date:20190528 for:批量插入数据
-
+                //1，更新客户类型：成功客户、失败客户
+                //2，更新客户姓名（非空）
                 importSummary.setTotal(list.size());
                 //非法的数据=excel数据 - 识别出来的号码总数
             }else{
