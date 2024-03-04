@@ -485,7 +485,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             importTask.setTaskStatus(taskStatus);
             midImportService.truncateTable();
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String msg = e.getMessage();
             log.error(msg, e);
             importTask.setTaskStatus(TASK_STATUS_ERROR);

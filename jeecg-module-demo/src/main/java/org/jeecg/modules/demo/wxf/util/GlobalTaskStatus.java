@@ -64,6 +64,11 @@ public class GlobalTaskStatus {
         if(isRunning()==false){
             return "没有执行中的任务";
         }
+        //超过15分钟的任务直接停掉
+        final long if15Mins = System.currentTimeMillis() - getInstanse().startTime.getTime() / 1000/60;
+        if (if15Mins >15){
+            end();
+        }
         final BizImportTask cur = getInstanse().curRunningTask;
         return "正在执行的任务 = batchNo:"+ cur.getBatchNo()+",taskType:"+ cur.getTaskType()+",beginTime:"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(getInstanse().startTime);
     }
