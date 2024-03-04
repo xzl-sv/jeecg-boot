@@ -38,6 +38,13 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
             "where p.phone is null group by  m.phone")
     void insertPhoneFromMidImport();
 
+
+
+    @Insert(" insert into biz_balck_phone (id,phone,create_time,create_by) " +
+            "            select  min(m.id), m.phone,now(),'admin' from biz_mid_import m left join biz_balck_phone p on p.phone=m.phone " +
+            "            where p.phone is null group by  m.phone ")
+    void insertBlackPhoneFromMidImport();
+
     @Delete("TRUNCATE table biz_mid_import")
     void truncateTable();
 }

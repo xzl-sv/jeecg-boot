@@ -55,6 +55,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     private static final String PHONE = "phone";
     private static final String CALL_RECORD = "callRecord";
     private static final String TRANSFER_RECORD = "transferRecord";
+    private static final String BLACK_RECORD = "black";
     private static final String TASK_STATUS_NORMAL = "2";
     private static final String TASK_STATUS_ERROR = "99";
     @Autowired
@@ -137,6 +138,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             return CALL_RECORD;
         }else if(clazz.equals(BizTransferRecord.class)){
             return TRANSFER_RECORD;
+        }else if(clazz.equals(BizBalckPhone.class)){
+            return BLACK_RECORD;
         }else{
             return "unknow";
         }
@@ -223,6 +226,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }else if(TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
             //运单记录列表导入任务
             doimportTransferRecord(importTask);
+        }else if(BLACK_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+            //运单记录列表导入任务
+            doimportBlackPhone(importTask);
         }
         importTaskService.updateById(importTask);
         GlobalTaskStatus.end();
@@ -425,6 +431,69 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             try {
                 if(inputstream!=null)
                     inputstream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    public void doimportBlackPhone(BizImportTask importTask) {
+
+        final String batchno = importTask.getBatchNo();
+        ImportSummary importSummary = new ImportSummary();
+
+        // 获取上传文件对象
+        File file = new File((importTask.getFilePath()));
+        FileInputStream inputstream = null;
+        ImportParams params = new ImportParams();
+        params.setTitleRows(0);
+        params.setHeadRows(1);
+        params.setNeedSave(false);
+        try {
+
+            // 2正常结束。99异常
+            String taskStatus = TASK_STATUS_NORMAL;
+            if(file.exists()){
+                inputstream = new FileInputStream(file);
+                final ExcelImportResult<BizMidImport> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizMidImport.class, params);
+                final Workbook workbook = objectExcelImportResult.getWorkbook();
+                //原始的excel数据
+                List<BizMidImport> list = objectExcelImportResult.getList();
+                final int excelTotalSize = list.size();
+                list.forEach(a->a.setBatchNo(batchno));
+                final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
+                //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
+                importExcelFilter.doFilter(list);
+
+                long start = System.currentTimeMillis();
+
+                midImportService.truncateTable();
+                midImportService.saveBatch(list);
+                //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
+                //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
+                log.info("doimportBlackPhone 消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
+
+                midImportService.insertBlackPhoneFromMidImport();
+                importSummary.setTotal(list.size());
+                //非法的数据=excel数据 - 识别出来的号码总数
+            }else{
+                taskStatus = TASK_STATUS_ERROR;
+            }
+            importSummary.setEndTime(new Date());
+            importTask.setTaskStatus(taskStatus);
+            midImportService.truncateTable();
+
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            importTask.setTaskStatus(TASK_STATUS_ERROR);
+            importSummary.setMsg(e.getMessage());
+        } finally {
+            importTask.setTaskSummary(JSON.toJSONString(importSummary));
+            try {
+                inputstream.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

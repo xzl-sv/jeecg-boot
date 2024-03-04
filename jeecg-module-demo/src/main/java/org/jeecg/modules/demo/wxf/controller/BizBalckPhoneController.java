@@ -13,6 +13,7 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.demo.wxf.entity.BizBalckPhone;
+import org.jeecg.modules.demo.wxf.entity.BizTransferRecord;
 import org.jeecg.modules.demo.wxf.service.IBizBalckPhoneService;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -20,6 +21,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -48,7 +50,11 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 @RequestMapping("/wxf/bizBalckPhone")
 @Slf4j
 public class BizBalckPhoneController extends JeecgController<BizBalckPhone, IBizBalckPhoneService> {
-	@Autowired
+	 @Autowired
+	 private IBizPhoneService bizPhoneService;
+
+
+	 @Autowired
 	private IBizBalckPhoneService bizBalckPhoneService;
 	
 	/**
@@ -172,7 +178,7 @@ public class BizBalckPhoneController extends JeecgController<BizBalckPhone, IBiz
     @RequiresPermissions("wxf:biz_balck_phone:importExcel")
     @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
-        return super.importExcel(request, response, BizBalckPhone.class);
+		return bizPhoneService.importExcelee(request, response, BizBalckPhone.class);
     }
 
 }

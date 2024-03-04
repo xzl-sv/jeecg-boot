@@ -2,6 +2,7 @@ package org.jeecg.modules.demo.wxf.service;
 
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @Description: 导入中间表
@@ -29,4 +30,7 @@ public interface IBizMidImportService extends IService<BizMidImport> {
     Integer phoneValueNum();
 
     void insertPhoneFromMidImport();
+
+    @Transactional(rollbackFor = Exception.class)
+    void insertBlackPhoneFromMidImport();
 }
