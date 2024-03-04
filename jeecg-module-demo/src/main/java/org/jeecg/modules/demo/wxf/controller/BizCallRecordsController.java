@@ -13,7 +13,6 @@ import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.modules.demo.wxf.entity.BizCallRecords;
-import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.service.IBizCallRecordsService;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -55,7 +54,7 @@ public class BizCallRecordsController extends JeecgController<BizCallRecords, IB
 
 	 @Autowired
 	 private IBizPhoneService bizPhoneService;
-	
+
 	/**
 	 * 分页列表查询
 	 *

@@ -215,8 +215,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         if(PHONE.equalsIgnoreCase(importTask.getTaskType())){
             //号码资源列表导入任务
             doimportPhone(importTask);
-        }else if(TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+        }else if(CALL_RECORD.equalsIgnoreCase(importTask.getTaskType())){
             //号码资源列表导入任务
+            doimportCallRecord(importTask);
         }
 
         log.info("cron run");
@@ -323,26 +324,17 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 //原始的excel数据
                 List<BizCallRecords> list = objectExcelImportResult.getList();
                 final int excelTotalSize = list.size();
-//                list.forEach(a->a.setBatchNo(batchno));
+                list.forEach(a->a.setBatchNo(batchno));
                 final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
                 //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
 
                 long start = System.currentTimeMillis();
-//                midImportService.saveBatch(list);
-                //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
-                //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
+                callRecordsService.saveBatch(list);
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //update-end-author:taoyan date:20190528 for:批量插入数据
-                //TODO 处理数据
 
-                final Integer existInDb = midImportService.phoneExistInDb();
-                final Integer valueNum = midImportService.phoneValueNum();
-                midImportService.insertPhoneFromMidImport();
                 importSummary.setTotal(list.size());
                 //非法的数据=excel数据 - 识别出来的号码总数
-                importSummary.setInvalidNotDup(excelTotalSize-list.size());
-                importSummary.setValid(valueNum);
-                importSummary.setDup(existInDb);
             }else{
                 taskStatus = TASK_STATUS_ERROR;
             }
@@ -350,7 +342,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             importTask.setTaskStatus(taskStatus);
 
 //                Thread.sleep(15000L);
-            midImportService.truncateTable();
 //                if(true){
 //                    throw new RuntimeException("我是手工抛出的异常，验证是否会吧任务更新成失败。");
 //                }
