@@ -219,8 +219,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             //号码资源列表导入任务
             doimportCallRecord(importTask);
         }
-
-        log.info("cron run");
+        importTaskService.updateById(importTask);
+        GlobalTaskStatus.end();
     }
 
 
@@ -289,8 +289,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 importSummary.setMsg(e.getMessage());
             } finally {
                 importTask.setTaskSummary(JSON.toJSONString(importSummary));
-                importTaskService.updateById(importTask);
-                GlobalTaskStatus.end();
                 try {
                     inputstream.close();
                 } catch (Exception e) {
@@ -358,8 +356,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             importSummary.setMsg(e.getMessage());
         } finally {
             importTask.setTaskSummary(JSON.toJSONString(importSummary));
-            importTaskService.updateById(importTask);
-            GlobalTaskStatus.end();
             try {
                 inputstream.close();
             } catch (Exception e) {

@@ -61,20 +61,22 @@ public class BizCallRecords implements Serializable {
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "开始时间")
     private java.util.Date callTime;
-	/**通话时长-秒*/
-	@Excel(name = "通话时长-秒", width = 15)
-    @ApiModelProperty(value = "通话时长-秒")
+	/**通话时长*/
+	@Excel(name = "通话时长", width = 15)
+    @ApiModelProperty(value = "通话时长")
     private java.lang.Integer callDuration;
 	/**录音地址*/
 	@Excel(name = "录音地址", width = 15)
     @ApiModelProperty(value = "录音地址")
     private java.lang.String recordingAddress;
-	/**是否拉黑y-n*/
-	@Excel(name = "是否拉黑y-n", width = 15)
-    @ApiModelProperty(value = "是否拉黑y-n")
+	/**是否拉黑*/
+	@Excel(name = "是否拉黑", width = 15, dicCode = "yn")
+	@Dict(dicCode = "yn")
+    @ApiModelProperty(value = "是否拉黑")
     private java.lang.String blackFlag;
 	/**性别*/
-	@Excel(name = "性别", width = 15)
+	@Excel(name = "性别", width = 15, dicCode = "sex")
+	@Dict(dicCode = "sex")
     @ApiModelProperty(value = "性别")
     private java.lang.String gender;
 	/**坐席工号*/
@@ -93,16 +95,25 @@ public class BizCallRecords implements Serializable {
 	@Excel(name = "客户地址", width = 15)
     @ApiModelProperty(value = "客户地址")
     private java.lang.String clientAddress;
-	/**金额、价格*/
-	@Excel(name = "金额、价格", width = 15)
-    @ApiModelProperty(value = "金额、价格")
-    private java.lang.Double price;
+	/**备注*/
+	@Excel(name = "备注", width = 15)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String price;
 	/**任务名称*/
 	@Excel(name = "任务名称", width = 15)
     @ApiModelProperty(value = "任务名称")
     private java.lang.String jobName;
-	/**导入批次号*/
-	@Excel(name = "导入批次号", width = 15)
-    @ApiModelProperty(value = "导入批次号")
+	/**批次号*/
+	@Excel(name = "批次号", width = 15)
+    @ApiModelProperty(value = "批次号")
     private java.lang.String batchNo;
+	/**客户状态*/
+	@Excel(name = "客户状态", width = 15, dicCode = "client_status")
+	@Dict(dicCode = "client_status")
+    @ApiModelProperty(value = "客户状态")
+    private java.lang.String clientStatus;
+	/**客户号码*/
+	@Excel(name = "客户号码", width = 15)
+    @ApiModelProperty(value = "客户号码")
+    private java.lang.String phone;
 }

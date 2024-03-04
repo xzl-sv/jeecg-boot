@@ -51,7 +51,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 public class BizCallRecordsController extends JeecgController<BizCallRecords, IBizCallRecordsService> {
 	@Autowired
 	private IBizCallRecordsService bizCallRecordsService;
-
+	
 	 @Autowired
 	 private IBizPhoneService bizPhoneService;
 
