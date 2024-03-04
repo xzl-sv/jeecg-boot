@@ -306,6 +306,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
         final String batchno = importTask.getBatchNo();
         ImportSummary importSummary = new ImportSummary();
+        importSummary.setBeginTime(new Date());
 
         // 获取上传文件对象
         File file = new File((importTask.getFilePath()));
@@ -334,6 +335,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //1，更新客户类型：成功客户、失败客户
                 //2，更新客户姓名（非空）
+                callRecordsService.updatePhoneByCallRecords(batchno);
                 importSummary.setTotal(list.size());
                 //非法的数据=excel数据 - 识别出来的号码总数
             }else{
@@ -341,11 +343,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             }
             importSummary.setEndTime(new Date());
             importTask.setTaskStatus(taskStatus);
-
-//                Thread.sleep(15000L);
-//                if(true){
-//                    throw new RuntimeException("我是手工抛出的异常，验证是否会吧任务更新成失败。");
-//                }
 
 
         } catch (Exception e) {

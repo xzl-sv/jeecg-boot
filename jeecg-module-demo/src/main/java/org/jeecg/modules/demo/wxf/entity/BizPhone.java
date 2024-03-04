@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 /**
  * @Description: 号码资源表
  * @Author: jeecg-boot
- * @Date:   2024-03-01
+ * @Date:   2024-03-04
  * @Version: V1.0
  */
 @Data
@@ -35,68 +35,69 @@ public class BizPhone implements Serializable {
 	/**主键*/
 	@TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "主键")
-    private String id;
+    private java.lang.String id;
 	/**创建人*/
     @ApiModelProperty(value = "创建人")
-    private String createBy;
+    private java.lang.String createBy;
 	/**创建日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建日期")
-    private Date createTime;
+    private java.util.Date createTime;
 	/**更新人*/
     @ApiModelProperty(value = "更新人")
-    private String updateBy;
+    private java.lang.String updateBy;
 	/**更新日期*/
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "更新日期")
-    private Date updateTime;
+    private java.util.Date updateTime;
 	/**所属部门*/
     @ApiModelProperty(value = "所属部门")
-    private String sysOrgCode;
+    private java.lang.String sysOrgCode;
 	/**客户名称*/
 	@Excel(name = "客户名称", width = 15)
     @ApiModelProperty(value = "客户名称")
-    private String clientName;
+    private java.lang.String clientName;
 	/**地址*/
 	@Excel(name = "地址", width = 15)
     @ApiModelProperty(value = "地址")
-    private String address;
+    private java.lang.String address;
 	/**省编码*/
 	@Excel(name = "省编码", width = 15)
     @ApiModelProperty(value = "省编码")
-    private String provinceCode;
+    private java.lang.String provinceCode;
 	/**市编码*/
 	@Excel(name = "市编码", width = 15)
     @ApiModelProperty(value = "市编码")
-    private String cityCode;
+    private java.lang.String cityCode;
 	/**批次号*/
 	@Excel(name = "批次号", width = 15)
     @ApiModelProperty(value = "批次号")
-    private String batchNo;
+    private java.lang.String batchNo;
 	/**性别*/
 	@Excel(name = "性别", width = 15, dicCode = "sex")
 	@Dict(dicCode = "sex")
     @ApiModelProperty(value = "性别")
-    private String gender;
+    private java.lang.String gender;
 	/**是否黑名单*/
 	@Excel(name = "是否黑名单", width = 15, dicCode = "yn")
 	@Dict(dicCode = "yn")
     @ApiModelProperty(value = "是否黑名单")
-    private String black;
+    private java.lang.String black;
 	/**客户状态*/
-	@Excel(name = "客户状态", width = 15)
+	@Excel(name = "客户状态", width = 15, dicCode = "client_status")
+	@Dict(dicCode = "client_status")
     @ApiModelProperty(value = "客户状态")
-    private String clientStatus;
+    private java.lang.String clientStatus;
 	/**最近提取时间*/
 	@Excel(name = "最近提取时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
 	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "最近提取时间")
-    private Date lastExportTime;
+    private java.util.Date lastExportTime;
 	/**客户号码*/
 	@Excel(name = "客户号码", width = 15)
     @ApiModelProperty(value = "客户号码")
-    private String phone;
+    private java.lang.String phone;
 }

@@ -2,6 +2,7 @@ package org.jeecg.modules.demo.wxf.service;
 
 import org.jeecg.modules.demo.wxf.entity.BizCallRecords;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @Description: 外呼记录
@@ -11,4 +12,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IBizCallRecordsService extends IService<BizCallRecords> {
 
+    /**
+     *
+     * 更新号码资源表中的：性别、客户状态
+     * @param batchNo 外呼记录的批次号
+     */
+    @Transactional(rollbackFor = Exception.class)
+    void updatePhoneByCallRecords(String batchNo);
 }
