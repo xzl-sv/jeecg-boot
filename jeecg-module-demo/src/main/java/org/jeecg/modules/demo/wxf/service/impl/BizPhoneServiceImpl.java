@@ -12,10 +12,7 @@ import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
 import org.jeecg.modules.demo.wxf.entity.*;
 import org.jeecg.modules.demo.wxf.mapper.BizPhoneMapper;
-import org.jeecg.modules.demo.wxf.service.IBizCallRecordsService;
-import org.jeecg.modules.demo.wxf.service.IBizImportTaskService;
-import org.jeecg.modules.demo.wxf.service.IBizMidImportService;
-import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
+import org.jeecg.modules.demo.wxf.service.*;
 import org.jeecg.modules.demo.wxf.util.BatchNoUtil;
 import org.jeecg.modules.demo.wxf.util.GlobalTaskStatus;
 import org.jeecg.modules.demo.wxf.util.PhoneUtil;
@@ -69,6 +66,11 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     @Autowired
     private IBizCallRecordsService callRecordsService;
 
+
+    @Autowired
+    private IBizTransferRecordService transferRecordService;
+    @Autowired
+    private IBizTransferRecordTmpService transferRecordTmpService;
 
     private  File multiPartFileToFile(MultipartFile multipartFile,Class clazz) throws IOException {
 
@@ -218,6 +220,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }else if(CALL_RECORD.equalsIgnoreCase(importTask.getTaskType())){
             //号码资源列表导入任务
             doimportCallRecord(importTask);
+        }else if(TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+            //运单记录列表导入任务
+            doimportTransferRecord(importTask);
         }
         importTaskService.updateById(importTask);
         GlobalTaskStatus.end();
@@ -275,7 +280,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 importTask.setTaskStatus(taskStatus);
 
 //                Thread.sleep(15000L);
-                midImportService.truncateTable();
 //                if(true){
 //                    throw new RuntimeException("我是手工抛出的异常，验证是否会吧任务更新成失败。");
 //                }
@@ -288,6 +292,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 importTask.setTaskStatus(TASK_STATUS_ERROR);
                 importSummary.setMsg(e.getMessage());
             } finally {
+                midImportService.truncateTable();
                 importTask.setTaskSummary(JSON.toJSONString(importSummary));
                 try {
                     inputstream.close();
@@ -355,6 +360,71 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             importTask.setTaskSummary(JSON.toJSONString(importSummary));
             try {
                 inputstream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    /**
+     * 执行导入通话记录
+     * @param importTask
+     */
+    public void doimportTransferRecord(BizImportTask importTask) {
+
+        final String batchno = importTask.getBatchNo();
+        ImportSummary importSummary = new ImportSummary();
+        importSummary.setBeginTime(new Date());
+
+        // 获取上传文件对象
+        File file = new File((importTask.getFilePath()));
+        FileInputStream inputstream = null;
+        ImportParams params = new ImportParams();
+        params.setTitleRows(0);
+        params.setHeadRows(1);
+        params.setNeedSave(false);
+        try {
+
+            // 2正常结束。99异常
+            String taskStatus = TASK_STATUS_NORMAL;
+            if(file.exists()){
+                inputstream = new FileInputStream(file);
+                final ExcelImportResult<BizTransferRecordTmp> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizTransferRecordTmp.class, params);
+                final Workbook workbook = objectExcelImportResult.getWorkbook();
+                //原始的excel数据
+                List<BizTransferRecordTmp> list = objectExcelImportResult.getList();
+                list.forEach(a->a.setBatchNo(batchno));
+
+                long start = System.currentTimeMillis();
+                //先清空数据，避免之前的bug遗留数据
+                transferRecordTmpService.truncate();
+                transferRecordTmpService.saveBatch(list);
+                log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
+                //1，更新客户地址：
+                transferRecordTmpService.insertFromTmpUpdatePhoneTableUpdateTransferStatus();
+
+
+                importSummary.setTotal(list.size());
+                //非法的数据=excel数据 - 识别出来的号码总数
+            }else{
+                taskStatus = TASK_STATUS_ERROR;
+            }
+            importSummary.setEndTime(new Date());
+            importTask.setTaskStatus(taskStatus);
+
+
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            log.error(msg, e);
+            importTask.setTaskStatus(TASK_STATUS_ERROR);
+            importSummary.setMsg(e.getMessage());
+        } finally {
+            transferRecordTmpService.truncate();
+            importTask.setTaskSummary(JSON.toJSONString(importSummary));
+            try {
+                if(inputstream!=null)
+                    inputstream.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

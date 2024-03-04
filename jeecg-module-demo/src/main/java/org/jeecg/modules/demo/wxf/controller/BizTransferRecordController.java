@@ -51,7 +51,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 @Slf4j
 public class BizTransferRecordController extends JeecgController<BizTransferRecord, IBizTransferRecordService> {
 
-	 @Autowired
+	@Autowired
 	 private IBizPhoneService bizPhoneService;
 
 

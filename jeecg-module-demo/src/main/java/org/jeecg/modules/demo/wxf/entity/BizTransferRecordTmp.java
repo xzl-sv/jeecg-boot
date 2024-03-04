@@ -19,80 +19,80 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
 /**
- * @Description: 运单记录
+ * @Description: biz_transfer_record_tmp
  * @Author: jeecg-boot
  * @Date:   2024-03-04
  * @Version: V1.0
  */
 @Data
-@TableName("biz_transfer_record")
+@TableName("biz_transfer_record_tmp")
 @Accessors(chain = true)
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="biz_transfer_record对象", description="运单记录")
-public class BizTransferRecord implements Serializable {
+@ApiModel(value="biz_transfer_record_tmp对象", description="biz_transfer_record_tmp")
+public class BizTransferRecordTmp implements Serializable {
     private static final long serialVersionUID = 1L;
 
-	/**主键*/
-	@TableId(type = IdType.ASSIGN_ID)
+    /**主键*/
+    @TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "主键")
     private java.lang.String id;
-	/**创建人*/
+    /**创建人*/
     @ApiModelProperty(value = "创建人")
     private java.lang.String createBy;
-	/**创建日期*/
-	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    /**创建日期*/
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "创建日期")
     private java.util.Date createTime;
-	/**更新人*/
+    /**更新人*/
     @ApiModelProperty(value = "更新人")
     private java.lang.String updateBy;
-	/**更新日期*/
-	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    /**更新日期*/
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "更新日期")
     private java.util.Date updateTime;
-	/**所属部门*/
+    /**所属部门*/
     @ApiModelProperty(value = "所属部门")
     private java.lang.String sysOrgCode;
-	/**收件人手机*/
-	@Excel(name = "收件人手机", width = 15)
+    /**收件人手机*/
+    @Excel(name = "收件人手机", width = 15)
     @ApiModelProperty(value = "收件人手机")
     private java.lang.String phone;
-	/**运单号*/
-	@Excel(name = "运单号", width = 15)
+    /**运单号*/
+    @Excel(name = "运单号", width = 15)
     @ApiModelProperty(value = "运单号")
     private java.lang.String transferNum;
-	/**生成运单时间*/
-	@Excel(name = "生成运单时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
-	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    /**生成运单时间*/
+    @Excel(name = "生成运单时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "生成运单时间")
     private java.util.Date transferCreateTime;
-	/**签收时间*/
-	@Excel(name = "签收时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
-	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    /**签收时间*/
+    @Excel(name = "签收时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "签收时间")
     private java.util.Date signTime;
-	/**运单状态*/
-	@Excel(name = "运单状态", width = 15)
+    /**运单状态*/
+    @Excel(name = "运单状态", width = 15)
     @ApiModelProperty(value = "运单状态")
     private java.lang.String transferStatus;
-	/**实收金额*/
-	@Excel(name = "实收金额", width = 15)
+    /**实收金额*/
+    @Excel(name = "实收金额", width = 15)
     @ApiModelProperty(value = "实收金额")
     private java.lang.String price;
-	/**物流公司*/
-	@Excel(name = "物流公司", width = 15)
+    /**物流公司*/
+    @Excel(name = "物流公司", width = 15)
     @ApiModelProperty(value = "物流公司")
     private java.lang.String transferComp;
-	/**收件人地址*/
-	@Excel(name = "收件人地址", width = 15)
+    /**收件人地址*/
+    @Excel(name = "收件人地址", width = 15)
     @ApiModelProperty(value = "收件人地址")
     private java.lang.String clientAddress;
-	/**批次号*/
-	@Excel(name = "批次号", width = 15)
+    /**批次号*/
+    @Excel(name = "批次号", width = 15)
     @ApiModelProperty(value = "批次号")
     private java.lang.String batchNo;
 }
