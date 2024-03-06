@@ -66,7 +66,7 @@ public class GlobalTaskStatus {
         }
         //超过15分钟的任务直接停掉
         final long if15Mins = System.currentTimeMillis() - getInstanse().startTime.getTime() / 1000/60;
-        if (if15Mins >15){
+        if (if15Mins > 15){
             end();
         }
         final BizImportTask cur = getInstanse().curRunningTask;

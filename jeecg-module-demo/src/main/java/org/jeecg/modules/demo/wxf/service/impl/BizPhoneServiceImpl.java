@@ -58,6 +58,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     private static final String BLACK_RECORD = "black";
     private static final String TASK_STATUS_NORMAL = "2";
     private static final String TASK_STATUS_ERROR = "99";
+
+    @Autowired
+    private IBizImportBatchService batchService;
     @Autowired
     private IBizImportTaskService importTaskService;
 
@@ -279,6 +282,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                     importSummary.setInvalidNotDup(excelTotalSize-list.size());
                     importSummary.setValid(valueNum);
                     importSummary.setDup(existInDb);
+                    batchService.save(importSummary.toBatch(batchno));
                 }else{
                     taskStatus = TASK_STATUS_ERROR;
                 }

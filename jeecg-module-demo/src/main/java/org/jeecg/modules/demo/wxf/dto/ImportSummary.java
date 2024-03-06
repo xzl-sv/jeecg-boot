@@ -4,6 +4,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.jeecg.modules.demo.wxf.entity.BizImportBatch;
 
 import java.util.Date;
 
@@ -70,5 +71,16 @@ public class ImportSummary {
 
     public ImportSummary(Integer total) {
         this.total = total;
+    }
+
+    public BizImportBatch toBatch(String batchNo){
+        BizImportBatch rm = new BizImportBatch();
+        rm.setBatchNo(batchNo);
+        rm.setImportTime(new Date());
+        rm.setOrgNum(getTotal());
+        rm.setValidNum(getValid());
+        rm.setInvalidNum(getInvalidNotDup());
+        rm.setDupNum(getDup());
+        return rm;
     }
 }
