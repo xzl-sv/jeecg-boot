@@ -22,8 +22,8 @@ public interface BizCallRecordsMapper extends BaseMapper<BizCallRecords> {
      * 更新号码资源包的性别
      * @param batchNo
      */
-    @Update("update  biz_phone p , biz_call_records cr set p.gender=cr.gender" +
-            "          where p.phone=cr.phone and cr.batch_no=c and cr.gender is not null")
+    @Update("update  biz_phone p , biz_call_records cr set p.gender=cr.gender,p.client_name=if(p.client_name is null or p.client_name='',cr.client_name,p.client_name)" +
+            "          where p.phone=cr.phone and cr.batch_no=#{batchNo,jdbcType=VARCHAR} and cr.gender is not null")
     void updateGender(@Param("batchNo")String batchNo);
 
     /**

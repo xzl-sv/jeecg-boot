@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 /**
  * @Description: 导入任务表
  * @Author: jeecg-boot
- * @Date:   2024-03-03
+ * @Date:   2024-03-06
  * @Version: V1.0
  */
 @Data
@@ -44,20 +44,22 @@ public class BizImportTask implements Serializable {
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "createTime")
     private java.util.Date createTime;
-	/**filePath*/
-	@Excel(name = "filePath", width = 15)
-    @ApiModelProperty(value = "filePath")
+	/**文件路径*/
+	@Excel(name = "文件路径", width = 15)
+    @ApiModelProperty(value = "文件路径")
     private java.lang.String filePath;
-	/**taskStatus*/
-	@Excel(name = "taskStatus", width = 15)
-    @ApiModelProperty(value = "taskStatus")
+	/**任务状态*/
+	@Excel(name = "任务状态", width = 15, dicCode = "task_status")
+	@Dict(dicCode = "task_status")
+    @ApiModelProperty(value = "任务状态")
     private java.lang.String taskStatus;
-	/**taskSummary*/
-	@Excel(name = "taskSummary", width = 15)
-    @ApiModelProperty(value = "taskSummary")
+	/**汇总信息*/
+	@Excel(name = "汇总信息", width = 15)
+    @ApiModelProperty(value = "汇总信息")
     private java.lang.String taskSummary;
 	/**任务类型*/
-	@Excel(name = "任务类型", width = 15)
+	@Excel(name = "任务类型", width = 15, dicCode = "task_type")
+	@Dict(dicCode = "task_type")
     @ApiModelProperty(value = "任务类型")
     private java.lang.String taskType;
 	/**批次号*/

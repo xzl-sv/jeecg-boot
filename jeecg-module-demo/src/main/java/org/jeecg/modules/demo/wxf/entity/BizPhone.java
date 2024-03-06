@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 /**
  * @Description: 号码资源表
  * @Author: jeecg-boot
- * @Date:   2024-03-04
+ * @Date:   2024-03-06
  * @Version: V1.0
  */
 @Data
@@ -63,14 +63,10 @@ public class BizPhone implements Serializable {
 	@Excel(name = "地址", width = 15)
     @ApiModelProperty(value = "地址")
     private java.lang.String address;
-	/**省编码*/
-	@Excel(name = "省编码", width = 15)
-    @ApiModelProperty(value = "省编码")
+	/**区域*/
+	@Excel(name = "区域", width = 15)
+    @ApiModelProperty(value = "区域")
     private java.lang.String provinceCode;
-	/**市编码*/
-	@Excel(name = "市编码", width = 15)
-    @ApiModelProperty(value = "市编码")
-    private java.lang.String cityCode;
 	/**批次号*/
 	@Excel(name = "批次号", width = 15)
     @ApiModelProperty(value = "批次号")
