@@ -7,11 +7,17 @@ import java.util.stream.Collectors;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.poi.ss.formula.functions.T;
+import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.JeecgBaseConfig;
 import org.jeecg.modules.demo.wxf.entity.BizExportRecord;
 import org.jeecg.modules.demo.wxf.service.IBizExportRecordService;
 
@@ -26,6 +32,7 @@ import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.jeecg.common.system.base.controller.JeecgController;
+import org.jeecgframework.poi.excel.view.JeecgEntityExcelWxfView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,7 +57,10 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 public class BizExportRecordController extends JeecgController<BizExportRecord, IBizExportRecordService> {
 	@Autowired
 	private IBizExportRecordService bizExportRecordService;
-	
+	 @Resource
+	 private JeecgBaseConfig jeecgBaseConfig;
+
+	 /**
 	/**
 	 * 分页列表查询
 	 *
@@ -159,7 +169,7 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
     @RequiresPermissions("wxf:biz_export_record:exportXls")
     @RequestMapping(value = "/exportXls")
     public ModelAndView exportXls(HttpServletRequest request, BizExportRecord bizExportRecord) {
-        return super.exportXls(request, bizExportRecord, BizExportRecord.class, "提取记录表");
+        return exportXlsCust(request, bizExportRecord, BizExportRecord.class, "提取记录表");
     }
 
     /**
@@ -174,5 +184,39 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
     public Result<?> importExcel(HttpServletRequest request, HttpServletResponse response) {
         return super.importExcel(request, response, BizExportRecord.class);
     }
+
+
+	 /**
+	  * 导出excel
+	  *
+	  * @param request
+	  */
+	 private ModelAndView exportXlsCust(HttpServletRequest request, BizExportRecord object, Class clazz, String title) {
+		 // Step.1 组装查询条件
+		 QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+		 LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+
+		 // 过滤选中数据
+		 String selections = request.getParameter("selections");
+		 if (oConvertUtils.isNotEmpty(selections)) {
+			 List<String> selectionList = Arrays.asList(selections.split(","));
+			 queryWrapper.in("id",selectionList);
+		 }
+		 // Step.2 获取导出数据
+		 List<BizExportRecord> exportList = service.list(queryWrapper);
+
+		 // Step.3 AutoPoi 导出Excel
+		 ModelAndView mv = new ModelAndView(new JeecgEntityExcelWxfView());
+		 //此处设置的filename无效 ,前端会重更新设置一下
+		 mv.addObject(NormalExcelConstants.FILE_NAME, title);
+		 mv.addObject(NormalExcelConstants.CLASS, clazz);
+		 //update-begin--Author:liusq  Date:20210126 for：图片导出报错，ImageBasePath未设置--------------------
+		 ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title);
+		 exportParams.setImageBasePath(jeecgBaseConfig.getPath().getUpload());
+		 //update-end--Author:liusq  Date:20210126 for：图片导出报错，ImageBasePath未设置----------------------
+		 mv.addObject(NormalExcelConstants.PARAMS,exportParams);
+		 mv.addObject(NormalExcelConstants.DATA_LIST, exportList);
+		 return mv;
+	 }
 
 }
