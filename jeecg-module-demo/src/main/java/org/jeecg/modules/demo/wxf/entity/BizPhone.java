@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 /**
  * @Description: 号码资源表
  * @Author: jeecg-boot
- * @Date:   2024-03-06
+ * @Date:   2024-03-07
  * @Version: V1.0
  */
 @Data
@@ -96,4 +96,26 @@ public class BizPhone implements Serializable {
 	@Excel(name = "客户号码", width = 15)
     @ApiModelProperty(value = "客户号码")
     private java.lang.String phone;
+	/**接通次数*/
+	@Excel(name = "接通次数", width = 15)
+    @ApiModelProperty(value = "接通次数")
+    private java.lang.Integer onCount;
+	/**总拨打次数*/
+	@Excel(name = "总拨打次数", width = 15)
+    @ApiModelProperty(value = "总拨打次数")
+    private java.lang.Integer totalCount;
+	/**最近接通时间*/
+	@Excel(name = "最近接通时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
+	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty(value = "最近接通时间")
+    private java.util.Date recentOnTime;
+	/**备注*/
+	@Excel(name = "备注", width = 15)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String price;
+	/**接通率*/
+	@Excel(name = "接通率", width = 15)
+    @ApiModelProperty(value = "接通率")
+    private java.lang.Double onRate;
 }

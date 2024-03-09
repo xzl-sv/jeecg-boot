@@ -2,11 +2,10 @@ package org.jeecg.modules.demo.wxf.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
@@ -34,13 +33,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Description: 号码资源表
@@ -193,18 +189,25 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
     @Scheduled(cron = "0/5 * * * * ? ")
     public void exampleSchedule() throws Exception{
+        BizImportTask bizImportTask=null;
         try {
-            innerRun();
-        } catch (Exception e) {
+             bizImportTask = innerRun();
+        } catch (Throwable e) {
             //不抛出异常
             e.printStackTrace();
+        }finally {
+            if(bizImportTask!=null){
+                importTaskService.updateById(bizImportTask);
+            }
+            GlobalTaskStatus.end();
         }
     }
 
-    private void innerRun() {
+//    @Transactional(rollbackFor = Exception.class)
+    public BizImportTask innerRun() {
         if(GlobalTaskStatus.isRunning()==true){
             log.info(GlobalTaskStatus.descCurTask());
-            return;
+            return null;
         }
 
         LambdaQueryWrapper<BizImportTask> query = new LambdaQueryWrapper<BizImportTask>()
@@ -212,13 +215,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         final List<BizImportTask> list = importTaskService.list(query);
         if(list.size()==0){
             log.info("不存在待执行的任务。");
-            return;
+            return null;
         }
         final BizImportTask importTask = list.get(0);
         log.info("待执行任务数量：{}，即将执行任务类型：{}，批次号：{} 的任务。",list.size(),importTask.getTaskType(),importTask.getBatchNo());
         if(GlobalTaskStatus.run(importTask)==false){
             log.info("很不幸，任务枪战失败，等待下次机会。");
-            return;
+            return importTask;
         }
         if(PHONE.equalsIgnoreCase(importTask.getTaskType())){
             //号码资源列表导入任务
@@ -233,33 +236,42 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             //运单记录列表导入任务
             doimportBlackPhone(importTask);
         }
-        importTaskService.updateById(importTask);
-        GlobalTaskStatus.end();
+        return importTask;
+
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void doimportPhone2(BizImportTask importTask) {
+        try {
+            midImportService.insertPhoneFromMidImport();
+            importTask.setTaskStatus(TASK_STATUS_NORMAL);
+        } catch (Exception e) {
+            e.printStackTrace();
+            importTask.setTaskStatus(TASK_STATUS_ERROR);
+        }
+
     }
 
 
+    @Transactional(rollbackFor = Exception.class)
     public void doimportPhone(BizImportTask importTask) {
 
+            // 2正常结束。99异常
+            String taskStatus = TASK_STATUS_NORMAL;
             final String batchno = importTask.getBatchNo();
             ImportSummary importSummary = new ImportSummary();
 
             // 获取上传文件对象
             File file = new File((importTask.getFilePath()));
-            FileInputStream inputstream = null;
             ImportParams params = new ImportParams();
             params.setTitleRows(2);
             params.setHeadRows(1);
             params.setNeedSave(false);
             try {
 
-                // 2正常结束。99异常
-                String taskStatus = TASK_STATUS_NORMAL;
                 if(file.exists()){
-                    inputstream = new FileInputStream(file);
-                    final ExcelImportResult<BizMidImport> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizMidImport.class, params);
-                    final Workbook workbook = objectExcelImportResult.getWorkbook();
-                    //原始的excel数据
-                    List<BizMidImport> list = objectExcelImportResult.getList();
+                    List<BizMidImport> list = parseDataFromFile(file, params);
                     final int excelTotalSize = list.size();
                     list.forEach(a->a.setBatchNo(batchno));
                     final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
@@ -267,6 +279,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                     importExcelFilter.doFilter(list);
 
                     long start = System.currentTimeMillis();
+                    midImportService.truncateTable();
                     midImportService.saveBatch(list);
                     //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
                     //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
@@ -287,7 +300,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                     taskStatus = TASK_STATUS_ERROR;
                 }
                 importSummary.setEndTime(new Date());
-                importTask.setTaskStatus(taskStatus);
 
 //                Thread.sleep(15000L);
 //                if(true){
@@ -299,17 +311,48 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
                 String msg = e.getMessage();
                 log.error(msg, e);
-                importTask.setTaskStatus(TASK_STATUS_ERROR);
+                taskStatus = TASK_STATUS_ERROR;
                 importSummary.setMsg(e.getMessage());
             } finally {
-                midImportService.truncateTable();
+//                midImportService.truncateTable();
+                importTask.setTaskStatus(taskStatus);
                 importTask.setTaskSummary(JSON.toJSONString(importSummary));
                 try {
-                    inputstream.close();
+//                    inputstream.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+    }
+
+    private static List<BizMidImport> parseDataFromFile(File file, ImportParams params) throws Exception {
+        List<BizMidImport> list = new ArrayList<>();
+        FileInputStream inputstream=null;
+        try {
+            inputstream = new FileInputStream(file);
+
+            if(file.getAbsoluteFile().getAbsolutePath().toLowerCase().endsWith("txt")){
+                //txt文件
+                FileUtils fu = new FileUtils();
+                list =  FileUtils.readLines(file, Charsets.UTF_8).stream().map(a->{
+                    final BizMidImport bmi = new BizMidImport();
+                    bmi.setPhone(a);
+                    return bmi;
+                }).collect(Collectors.toList());
+            }else{
+                final ExcelImportResult<BizMidImport> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizMidImport.class, params);
+//                    final Workbook workbook = objectExcelImportResult.getWorkbook();
+                //原始的excel数据
+                list = objectExcelImportResult.getList();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }finally {
+            if(inputstream!=null)
+                inputstream.close();
+        }
+        return list;
+
     }
 
 
@@ -330,10 +373,10 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         params.setTitleRows(0);
         params.setHeadRows(1);
         params.setNeedSave(false);
+        String taskStatus = TASK_STATUS_NORMAL;
         try {
 
             // 2正常结束。99异常
-            String taskStatus = TASK_STATUS_NORMAL;
             if(file.exists()){
                 inputstream = new FileInputStream(file);
                 final ExcelImportResult<BizCallRecords> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizCallRecords.class, params);
@@ -357,16 +400,16 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 taskStatus = TASK_STATUS_ERROR;
             }
             importSummary.setEndTime(new Date());
-            importTask.setTaskStatus(taskStatus);
 
 
         } catch (Exception e) {
             //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
             String msg = e.getMessage();
             log.error(msg, e);
-            importTask.setTaskStatus(TASK_STATUS_ERROR);
+            taskStatus=TASK_STATUS_ERROR;
             importSummary.setMsg(e.getMessage());
         } finally {
+            importTask.setTaskStatus(taskStatus);
             importTask.setTaskSummary(JSON.toJSONString(importSummary));
             try {
                 inputstream.close();
@@ -487,7 +530,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             }
             importSummary.setEndTime(new Date());
             importTask.setTaskStatus(taskStatus);
-            midImportService.truncateTable();
+//            midImportService.truncateTable();
 
         } catch (Throwable e) {
             String msg = e.getMessage();

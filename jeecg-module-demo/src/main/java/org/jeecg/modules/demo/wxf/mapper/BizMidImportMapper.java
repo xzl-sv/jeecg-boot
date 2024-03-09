@@ -29,14 +29,18 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
      * valid的数量
      * @return
      */
-    @Select("select  count(distinct m.phone) from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
+    @Select("select  count(distinct m.phone) from biz_mid_import m left join biz_phone p on p.phone=m.phone " +
             "where p.phone is null ")
     public Integer phoneValueNum();
 
-    @Insert("insert into biz_phone (id,province_code,batch_no,phone,create_time,create_by)\n" +
+    @Insert("insert into biz_phone (id,province_code,batch_no,phone,create_time,create_by) " +
             "select  min(m.id),min(m.province_code),min(m.batch_no),  m.phone,now(),'admin' from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
-            "where p.phone is null group by  m.phone")
+            "where p.phone is null group by  m.phone limit 10000")
     void insertPhoneFromMidImport();
+
+    @Select("select count(*) from (select m.phone from biz_mid_import m left join biz_phone p on p.phone=m.phone " +
+            "where p.phone is null group by  m.phone ) t")
+    Integer checkIfShouldInsert();
 
 
 

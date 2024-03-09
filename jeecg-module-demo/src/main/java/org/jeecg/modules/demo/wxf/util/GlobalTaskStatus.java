@@ -53,7 +53,7 @@ public class GlobalTaskStatus {
 
     public synchronized  static void end(){
         getInstanse().curRunningTask=null;
-        getInstanse().startTime=null;
+//        getInstanse().startTime=null;
     }
 
     /**
@@ -65,7 +65,7 @@ public class GlobalTaskStatus {
             return "没有执行中的任务";
         }
         //超过15分钟的任务直接停掉
-        final long if15Mins = System.currentTimeMillis() - getInstanse().startTime.getTime() / 1000/60;
+        final long if15Mins = (System.currentTimeMillis() - getInstanse().startTime.getTime()) / 1000/60;
         if (if15Mins > 15){
             end();
         }

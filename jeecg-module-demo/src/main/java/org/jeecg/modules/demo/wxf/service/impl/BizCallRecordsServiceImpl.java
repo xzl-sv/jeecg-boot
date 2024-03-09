@@ -20,7 +20,7 @@ public class BizCallRecordsServiceImpl extends ServiceImpl<BizCallRecordsMapper,
 
     /**
      *
-     * 更新号码资源表中的：性别、客户状态
+     * 更新号码资源表中的：性别、客户状态+接通总次数、最近接通时间、总拨出次数
      * @param batchNo 外呼记录的批次号
      */
     @Override
@@ -30,6 +30,9 @@ public class BizCallRecordsServiceImpl extends ServiceImpl<BizCallRecordsMapper,
         callRecordsMapper.updateGender(batchNo);
         callRecordsMapper.updateSbStatus(batchNo);
         callRecordsMapper.updateCgStatus(batchNo);
+        callRecordsMapper.updateTotalCall();
+        callRecordsMapper.updateOnCallTimeAndCnt();
+        callRecordsMapper.updateOnrate();
 
     }
 }

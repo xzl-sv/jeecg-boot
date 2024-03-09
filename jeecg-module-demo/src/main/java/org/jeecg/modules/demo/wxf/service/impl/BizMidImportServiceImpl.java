@@ -1,5 +1,6 @@
 package org.jeecg.modules.demo.wxf.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.mapper.BizMidImportMapper;
 import org.jeecg.modules.demo.wxf.service.IBizMidImportService;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @Version: V1.0
  */
 @Service
+@Slf4j
 public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, BizMidImport> implements IBizMidImportService {
 
     @Override
@@ -49,7 +51,13 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void insertPhoneFromMidImport(){
-        this.baseMapper.insertPhoneFromMidImport();
+        Integer shouldInsert = this.baseMapper.checkIfShouldInsert();
+        while(shouldInsert>0){
+            log.info("should insert size is:{}",shouldInsert);
+            this.baseMapper.insertPhoneFromMidImport();
+            shouldInsert = this.baseMapper.checkIfShouldInsert();
+        }
+
     }
 
     @Override

@@ -43,5 +43,31 @@ public interface BizCallRecordsMapper extends BaseMapper<BizCallRecords> {
             "          where p.phone=cr.phone and cr.batch_no=#{batchNo,jdbcType=VARCHAR} and cr.client_status ='cg'")
     void updateCgStatus(@Param("batchNo")String batchNo);
 
+    /**
+     * 更新接通总次数+最近接通时间
+     */
+    @Update("update biz_phone pp ,( " +
+            "select cr.phone phone ,count(*) on_count ,max(cr.call_time) last_on_call_time from " +
+            " biz_call_records cr  where cr.call_duration>0 group by cr.phone ) t " +
+            "set pp.on_count=t.on_count,pp.recent_on_time=t.last_on_call_time " +
+            "where pp.phone=t.phone")
+    void updateOnCallTimeAndCnt();
+
+    /**
+     * 接通总次数
+     */
+    @Update("update biz_phone pp ,( " +
+            "select cr.phone phone ,count(*) total_count   from " +
+            " biz_call_records cr    group by cr.phone ) t " +
+            "set pp.total_count=t.total_count " +
+            "where pp.phone=t.phone")
+    void updateTotalCall();
+
+    /**
+     * 接通率
+     */
+    @Update("update biz_phone set on_rate=on_count/total_count where total_count>0 ")
+    void updateOnrate();
+
 
 }

@@ -1,6 +1,7 @@
 package org.jeecg.modules.demo.wxf.service;
 
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.modules.demo.wxf.entity.BizImportTask;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -23,4 +24,6 @@ public interface IBizPhoneService extends IService<BizPhone> {
      * @return
      */
     Result<?> importExcelee(HttpServletRequest request, HttpServletResponse response,Class clazz);
+
+    void doimportPhone2(BizImportTask importTask);
 }
