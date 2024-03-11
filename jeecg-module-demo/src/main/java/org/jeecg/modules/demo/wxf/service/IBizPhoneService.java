@@ -26,7 +26,7 @@ public interface IBizPhoneService extends IService<BizPhone> {
      */
     Result<?> importExcelee(HttpServletRequest request, HttpServletResponse response,Class clazz);
 
-    Result<BizExportRecord> exportExcel(Class clazz);
+    Result<BizExportRecord> submitExportTask(Class clazz, String paramMapJson);
 
     void doimportPhone2(BizImportTask importTask);
 }

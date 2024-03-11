@@ -1,13 +1,21 @@
 package org.jeecg.modules.demo.wxf.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.ImportExcelFilter;
+import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
 import org.jeecg.modules.demo.wxf.entity.*;
 import org.jeecg.modules.demo.wxf.mapper.BizPhoneMapper;
@@ -40,6 +48,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.jeecg.modules.demo.wxf.util.Consts.DEFAULT_EXPORT_SIZE;
 
 /**
  * @Description: 号码资源表
@@ -77,6 +87,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     private IBizTransferRecordService transferRecordService;
     @Autowired
     private IBizTransferRecordTmpService transferRecordTmpService;
+
+    @Autowired
+    private IBizExportRecordService exportRecordService;
 
     private  File multiPartFileToFile(MultipartFile multipartFile,Class clazz) throws IOException {
 
@@ -135,10 +148,14 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     }
 
     @Override
-    public Result<BizExportRecord> exportExcel(Class clazz){
+    public Result<BizExportRecord> submitExportTask(Class clazz, String paramMapJson){
         final String batchno = BatchNoUtil.generate();
         BizImportTask importTask = new BizImportTask("filePath","1",translateTaskType(clazz),batchno);
+        importTask.setTaskSummary(paramMapJson);
         importTaskService.save(importTask);
+        BizExportRecord ber = new BizExportRecord();
+        ber.setBatchNo(batchno);
+        exportRecordService.save(ber);
         return Result.ok("任务提交成功，稍后将自动执行导出操作！");
     }
 
@@ -244,21 +261,27 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             log.info("很不幸，任务枪战失败，等待下次机会。");
             return importTask;
         }
-        if(IMPORT_PHONE.equalsIgnoreCase(importTask.getTaskType())){
-            //号码资源列表导入任务
-            doimportPhone(importTask);
-        }else if(IMPORT_CALL_RECORD.equalsIgnoreCase(importTask.getTaskType())){
-            //号码资源列表导入任务
-            doimportCallRecord(importTask);
-        }else if(IMPORT_TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
-            //运单记录列表导入任务
-            doimportTransferRecord(importTask);
-        }else if(IMPORT_BLACK_RECORD.equalsIgnoreCase(importTask.getTaskType())){
-            //运单记录列表导入任务
-            doimportBlackPhone(importTask);
-        }else if(EXPORT_PHONE.equalsIgnoreCase(importTask.getTaskType())){
-            //导出记录
-            doexportPhone(importTask);
+        try {
+            if(IMPORT_PHONE.equalsIgnoreCase(importTask.getTaskType())){
+                //号码资源列表导入任务
+                doimportPhone(importTask);
+            }else if(IMPORT_CALL_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+                //号码资源列表导入任务
+                doimportCallRecord(importTask);
+            }else if(IMPORT_TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+                //运单记录列表导入任务
+                doimportTransferRecord(importTask);
+            }else if(IMPORT_BLACK_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+                //运单记录列表导入任务
+                doimportBlackPhone(importTask);
+            }else if(EXPORT_PHONE.equalsIgnoreCase(importTask.getTaskType())){
+                //导出记录
+                doexportPhone(importTask);
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+            importTask.setTaskStatus(TASK_STATUS_ERROR);
+            importTask.setTaskSummary(e.getMessage()+"-->"+importTask.getTaskSummary());
         }
         return importTask;
 
@@ -588,25 +611,134 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     }
 
 
+    /**
+     * http://localhost:3100/jeecgboot/wxf/bizExportRecord/list?column=createTime&order=desc&pageNo=1&pageSize=10&batchNo=12&createTime[]=2024-03-11+17:03:12&createTime[]=2024-03-16+17:03:18&excludeCity=130100,130400&tqsx=2&jtcs=4&wjt=9&tqsj=8&tqsl=6&_t=1710149348334
+     *
+     *
+     * @param importTask
+     */
     private void doexportPhone(BizImportTask importTask) {
         String taskStatus = TASK_STATUS_NORMAL;
 
-//        // Step.1 组装查询条件
-//        QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
-//        LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
-//
-//        // 过滤选中数据
-//        String selections = request.getParameter("selections");
-//        if (oConvertUtils.isNotEmpty(selections)) {
-//            List<String> selectionList = Arrays.asList(selections.split(","));
-//            queryWrapper.in("id",selectionList);
-//        }
-//        // Step.2 获取导出数据
-//        List<BizExportRecord> exportList = service.list(queryWrapper);
-        final List<BizPhone> list = this.list();
+        final Map<String, String[]> param = JSON.parseObject(importTask.getTaskSummary(), new TypeReference<Map<String, String[]>>() {
+        });
+
+        // Step.1 组装查询条件
+        QueryWrapper<BizPhone> queryWrapper =  new QueryWrapper<BizPhone>();
+
+//        默认：
+//        1.已成单（客户状态是成功客户）的不提
+//        2.黑名单不提
+//        3.女不提
+//        查询条件：
+//        batchNo 提取指定批次（输入批次号）
+//        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
+//        tqsx 取料顺序：（选择随机or入库时间（先近后远））
+//        city_exclude 排除城市：（选择不需要的城市）
+//        排除接通：
+//        jtcs 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
+//        wjt 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
+//        tqsj 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
+//        tqsl 缺失：提取数量
+
+        //        默认：
+        //        1.已成单（客户状态是成功客户）的不提
+        //        2.黑名单不提
+        //        3.女不提
+        queryWrapper.ne("client_status","cg");
+//        queryWrapper.ne("black","1");
+        queryWrapper.and(w->{w.eq("black","0").or().isNull("black");});
+        queryWrapper.ne("gender","2");
+        //        batchNo 提取指定批次（输入批次号）
+        if(param.get("batchNo")!=null && StringUtils.isNotBlank(((String[])param.get("batchNo"))[0]))queryWrapper.eq("batchNo",param.get("batchNo").toString());
+//        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
+//        if(param.get("createTime")!=null && StringUtils.isNotBlank(param.get("batchNo").toString()))queryWrapper.eq("batchNo",param.get("batchNo").toString());
+        //        tqsx 取料顺序：（选择随机or入库时间（先近后远））
+        //提取顺序是否按照入库时间，否：随机，是：根据入库时间
+        boolean isOrderByInserTime = false;
+        if(param.get("tqsx")!=null && StringUtils.equalsIgnoreCase("rksj",((String[])param.get("tqsx"))[0])){
+            queryWrapper.orderByDesc("create_time");
+            isOrderByInserTime = true;
+        }
+//        city_exclude 排除城市：（选择不需要的城市）
+        if(param.get("city_exclude")!=null && StringUtils.isNotBlank(((String[])param.get("city_exclude"))[0])) {
+            final String cityExclude = ((String[])param.get("batchNo"))[0];
+            List<String> citys = new ArrayList<>();
+            final String[] split = cityExclude.split(",");
+            for (int i = 0; i < split.length; i++) {
+                String cityShort = split[i];
+                if(cityShort.length()<6){
+                    continue;
+                }
+                final StringBuffer citylong = new StringBuffer("").append(cityShort.substring(0, 2)).append("0000,").append(cityShort.substring(0,4)).append("00,").append(cityShort.substring(0, 5)).append("1");
+                citys.add(citylong.toString());
+            }
+            if(citys.size()>0){
+                queryWrapper.notIn("province_code",citys);
+            }
+        }
+//        jtcs 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
+        if(param.get("jtcs")!=null && StringUtils.isNotBlank(((String[])param.get("jtcs"))[0])) {
+            queryWrapper.le("on_count",Integer.parseInt(((String[])param.get("jtcs"))[0]));
+        }
+//        wjt 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
+        if(param.get("wjt")!=null && StringUtils.isNotBlank(((String[])param.get("wjt"))[0])) {
+            final int daysRecent = Integer.parseInt(((String[])param.get("wjt"))[0]);
+            final Date dateBeforeDays = DateUtils.addDays(new Date(), daysRecent * -1);
+            queryWrapper.and(w->{w.lt("recent_on_time", dateBeforeDays).or().isNull("recent_on_time");});
+        }
+//        tqsj 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
+        if(param.get("tqsj")!=null && StringUtils.isNotBlank(((String[])param.get("tqsj"))[0])) {
+            final int daysRecent = Integer.parseInt(((String[])param.get("tqsj"))[0]);
+            final Date dateBeforeDays = DateUtils.addDays(new Date(), daysRecent * -1);
+            queryWrapper.and(w->{w.lt("last_export_time", dateBeforeDays).or().isNull("last_export_time");});
+        }
+//        tqsl 缺失：提取数量
+        //默认提取数量10000
+        int tqsl = DEFAULT_EXPORT_SIZE;
+        if(param.get("tqsl")!=null && StringUtils.isNotBlank(((String[])param.get("tqsl"))[0])) {
+            tqsl = Integer.parseInt(((String[])param.get("tqsl"))[0]);
+        }
+        List<BizPhone> list = null;
+
+        if(isOrderByInserTime){
+            //非随机，只需要取符合条件的数量即可
+            Page<BizPhone> page = new Page<BizPhone>(1, tqsl);
+            list = this.page(page, queryWrapper).getRecords();
+        }else{
+            list = list(queryWrapper);
+            if(list.size()>tqsl){
+                //数量超过要取的数量，需要随机操作
+                Collections.shuffle(list);
+                list = list.subList(0, tqsl);
+            }
+        }
         try {
+            final int listSize = list.size();
+            List<BizPhone> toBeUpdateExportTime = new ArrayList<>(list.size());
+            for (BizPhone p:list){
+                BizPhone tb = new BizPhone();
+                tb.setId(p.getId());
+                tb.setLastExportTime(new Date());
+                toBeUpdateExportTime.add(tb);
+            }
             final String filePath = exportDataToExcel(list);
+            //导出成功后更新最近导出时间，仅仅更新最近导出时间
+
+            this.updateBatchById(toBeUpdateExportTime);
             importTask.setFilePath(filePath);
+            QueryWrapper<BizExportRecord> p = new QueryWrapper<>();
+            p.eq("batch_no",importTask.getBatchNo());
+            BizExportRecord one = exportRecordService.getOne(p, false);
+            if(one==null){
+                one = new BizExportRecord();
+            }
+            one.setSize(listSize);
+            one.setFileAddress(filePath);
+            one.setExportTime(new Date());
+            one.setBatchNo(importTask.getBatchNo());
+            exportRecordService.saveOrUpdate(one);
+
         } catch (Exception e) {
             e.printStackTrace();
             taskStatus = TASK_STATUS_ERROR;

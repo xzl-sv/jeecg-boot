@@ -73,4 +73,7 @@ public class BizExportRecord implements Serializable {
 	@Excel(name = "提取规则描述", width = 15)
     @ApiModelProperty(value = "提取规则描述")
     private java.lang.String exportRule;
+	@Excel(name = "批次号", width = 80)
+    @ApiModelProperty(value = "批次号")
+    private java.lang.String batchNo;
 }

@@ -11,4 +11,6 @@ public class Consts {
      * 批量插入的数量。解决一次性插入50w导致sql超时的问题（超过10秒）
      */
     public static Integer BATCH_INSERT_SIZE=50000;
+
+    public static Integer DEFAULT_EXPORT_SIZE = 10000;
 }

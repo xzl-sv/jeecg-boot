@@ -76,7 +76,7 @@ public class BizPhone implements Serializable {
 	@Dict(dicCode = "sex")
     @ApiModelProperty(value = "性别")
     private java.lang.String gender;
-	/**是否黑名单*/
+	/**是否黑名单,1是0否*/
 	@Excel(name = "是否黑名单", width = 15, dicCode = "yn")
 	@Dict(dicCode = "yn")
     @ApiModelProperty(value = "是否黑名单")

@@ -78,4 +78,5 @@ public class BizImportTask implements Serializable {
         this.taskType = taskType;
         this.batchNo = batchNo;
     }
+
 }

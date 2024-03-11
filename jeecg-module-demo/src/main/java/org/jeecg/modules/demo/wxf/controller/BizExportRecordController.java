@@ -3,15 +3,11 @@ package org.jeecg.modules.demo.wxf.controller;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.poi.ss.formula.functions.T;
+import com.alibaba.fastjson.TypeReference;
 import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
@@ -27,17 +23,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
-import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
-import org.jeecgframework.poi.excel.entity.ImportParams;
-import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecgframework.poi.excel.view.JeecgEntityExcelWxfView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import com.alibaba.fastjson.JSON;
 import io.swagger.annotations.Api;
@@ -81,12 +72,39 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
+
+		final Map<String, String[]> parameterMap = req.getParameterMap();
+//		parameterMap.remove()
+		final String o = JSON.toJSONString(parameterMap);
+		log.info("param is :{}", o);
+		final Map<String, String[]> stringMap = JSON.parseObject(o, new TypeReference<Map<String, String[]>>() {
+		});
 		QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(bizExportRecord, req.getParameterMap());
 		Page<BizExportRecord> page = new Page<BizExportRecord>(pageNo, pageSize);
 		IPage<BizExportRecord> pageList = bizExportRecordService.page(page, queryWrapper);
+		this.submit(bizExportRecord,pageNo,pageSize,req);
 		return Result.OK(pageList);
 	}
-	
+
+	 @ApiOperation(value="提交记录任务", notes="提交记录任务")
+	 @GetMapping(value = "/submit")
+	 public Result<String> submit(BizExportRecord bizExportRecord,
+														 @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+														 @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+														 HttpServletRequest req) {
+
+		 final Map<String, String[]> parameterMap = req.getParameterMap();
+		 final String o = JSON.toJSONString(parameterMap);
+
+		 bizPhoneService.submitExportTask(BizExportRecord.class,o);
+		 final Map<String, String[]> stringMap = JSON.parseObject(o, new TypeReference<Map<String, String[]>>() {
+		 });
+		 QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(bizExportRecord, stringMap);
+		 Page<BizExportRecord> page = new Page<BizExportRecord>(pageNo, pageSize);
+//		 IPage<BizExportRecord> pageList = bizExportRecordService.page(page, queryWrapper);
+		 return Result.OK("导出任务已提交，稍微将自动执行！");
+	 }
+
 	/**
 	 *   添加
 	 *
@@ -173,7 +191,10 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
     @RequiresPermissions("wxf:biz_export_record:exportXls")
     @RequestMapping(value = "/exportXlsAsyn")
     public Result<?> exportXlsAsyn(HttpServletRequest request, BizExportRecord bizExportRecord) {
-		return bizPhoneService.exportExcel(BizExportRecord.class);
+//		final Map<String, String[]> parameterMap = request.getParameterMap();
+////		parameterMap.remove()
+//		log.info("param is :{}",JSON.toJSONString(parameterMap));
+		return bizPhoneService.submitExportTask(BizExportRecord.class,"");
     }
 
     /**
