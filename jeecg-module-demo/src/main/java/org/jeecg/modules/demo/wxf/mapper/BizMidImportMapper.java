@@ -35,8 +35,8 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
 
     @Insert("insert into biz_phone (id,province_code,batch_no,phone,create_time,create_by) " +
             "select  min(m.id),min(m.province_code),min(m.batch_no),  m.phone,now(),'admin' from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
-            "where p.phone is null group by  m.phone limit 10000")
-    void insertPhoneFromMidImport();
+            "where p.phone is null group by  m.phone limit #{batchNo,jdbcType=INTEGER}")
+    void insertPhoneFromMidImport(@Param("batchNo")Integer batchNo);
 
     @Select("select count(*) from (select m.phone from biz_mid_import m left join biz_phone p on p.phone=m.phone " +
             "where p.phone is null group by  m.phone ) t")

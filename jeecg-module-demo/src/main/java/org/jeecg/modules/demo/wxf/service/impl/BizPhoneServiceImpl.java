@@ -15,7 +15,9 @@ import org.jeecg.modules.demo.wxf.service.*;
 import org.jeecg.modules.demo.wxf.util.BatchNoUtil;
 import org.jeecg.modules.demo.wxf.util.GlobalTaskStatus;
 import org.jeecg.modules.demo.wxf.util.PhoneUtil;
+import org.jeecgframework.poi.excel.ExcelExportUtil;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
+import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.entity.result.ExcelImportResult;
 import org.jeecgframework.poi.util.PoiPublicUtil;
@@ -33,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -48,10 +51,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> implements IBizPhoneService {
 
-    private static final String PHONE = "phone";
-    private static final String CALL_RECORD = "callRecord";
-    private static final String TRANSFER_RECORD = "transferRecord";
-    private static final String BLACK_RECORD = "black";
+    private static final String IMPORT_PHONE = "phone";
+    private static final String IMPORT_CALL_RECORD = "callRecord";
+    private static final String IMPORT_TRANSFER_RECORD = "transferRecord";
+    private static final String IMPORT_BLACK_RECORD = "black";
+    private static final String EXPORT_PHONE = "export_phone";
+
+
     private static final String TASK_STATUS_NORMAL = "2";
     private static final String TASK_STATUS_ERROR = "99";
 
@@ -81,7 +87,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toUpperCase();
         }
 
-        String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl( clazz));
+        String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl( clazz, null));
         SimpleDateFormat format = new SimpleDateFormat("yyyMMddHHmmss");
         final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +"."+extension;
 
@@ -119,26 +125,36 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            BizImportTask importTask = new BizImportTask();
-            importTask.setBatchNo(batchno);
-            importTask.setTaskStatus("1");
-            importTask.setFilePath(newFile!=null?newFile.getAbsolutePath():"");
-            importTask.setTaskType(translateTaskType(clazz));
+            final String filePath = newFile != null ? newFile.getAbsolutePath() : "";
+
+            BizImportTask importTask = new BizImportTask(filePath,"1",translateTaskType(clazz),batchno);
             importTaskService.save(importTask);
             return Result.ok("文件上传成功，稍后将自动执行导入操作！");
         }
         return Result.error("文件上传失败！");
     }
 
+    @Override
+    public Result<BizExportRecord> exportExcel(Class clazz){
+        final String batchno = BatchNoUtil.generate();
+        BizImportTask importTask = new BizImportTask("filePath","1",translateTaskType(clazz),batchno);
+        importTaskService.save(importTask);
+        return Result.ok("任务提交成功，稍后将自动执行导出操作！");
+    }
+
+
+
     private String translateTaskType(Class clazz){
         if(clazz.equals(BizMidImport.class)){
-            return PHONE;
+            return IMPORT_PHONE;
         }else if(clazz.equals(BizCallRecords.class)){
-            return CALL_RECORD;
+            return IMPORT_CALL_RECORD;
         }else if(clazz.equals(BizTransferRecord.class)){
-            return TRANSFER_RECORD;
+            return IMPORT_TRANSFER_RECORD;
         }else if(clazz.equals(BizBalckPhone.class)){
-            return BLACK_RECORD;
+            return IMPORT_BLACK_RECORD;
+        }else if(clazz.equals(BizExportRecord.class)){
+            return EXPORT_PHONE;
         }else{
             return "unknow";
         }
@@ -173,10 +189,15 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     }
 
 
+    /**
+     *
+     * @param pojoClass
+     * @param baseDir 上传时传null对应默认目录为:upload/excelUpload，下载时手工指定目录为：download/excelDownload
+     * @return
+     */
+    public String getSaveExcelUrl(Class<?> pojoClass, String baseDir)  {
 
-
-    public String getSaveExcelUrl(Class<?> pojoClass)  {
-        final String defaultDir = "upload/excelUpload";
+        final String defaultDir = baseDir!=null?baseDir:"upload/excelUpload";
         String url = "";
         url = pojoClass.getName().split("\\.")[pojoClass.getName().split("\\.").length - 1];
         final String dir = defaultDir + "/" + url;
@@ -223,22 +244,26 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             log.info("很不幸，任务枪战失败，等待下次机会。");
             return importTask;
         }
-        if(PHONE.equalsIgnoreCase(importTask.getTaskType())){
+        if(IMPORT_PHONE.equalsIgnoreCase(importTask.getTaskType())){
             //号码资源列表导入任务
             doimportPhone(importTask);
-        }else if(CALL_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+        }else if(IMPORT_CALL_RECORD.equalsIgnoreCase(importTask.getTaskType())){
             //号码资源列表导入任务
             doimportCallRecord(importTask);
-        }else if(TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+        }else if(IMPORT_TRANSFER_RECORD.equalsIgnoreCase(importTask.getTaskType())){
             //运单记录列表导入任务
             doimportTransferRecord(importTask);
-        }else if(BLACK_RECORD.equalsIgnoreCase(importTask.getTaskType())){
+        }else if(IMPORT_BLACK_RECORD.equalsIgnoreCase(importTask.getTaskType())){
             //运单记录列表导入任务
             doimportBlackPhone(importTask);
+        }else if(EXPORT_PHONE.equalsIgnoreCase(importTask.getTaskType())){
+            //导出记录
+            doexportPhone(importTask);
         }
         return importTask;
 
     }
+
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -548,5 +573,95 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     }
 
 
+
+    private void autoCreateDirAndFile(File f){
+        if(f.getParentFile().exists()==false){
+            f.getParentFile().mkdirs();
+        }
+        if(f.exists()==false){
+            try {
+                f.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    private void doexportPhone(BizImportTask importTask) {
+        String taskStatus = TASK_STATUS_NORMAL;
+
+//        // Step.1 组装查询条件
+//        QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+//        LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+//
+//        // 过滤选中数据
+//        String selections = request.getParameter("selections");
+//        if (oConvertUtils.isNotEmpty(selections)) {
+//            List<String> selectionList = Arrays.asList(selections.split(","));
+//            queryWrapper.in("id",selectionList);
+//        }
+//        // Step.2 获取导出数据
+//        List<BizExportRecord> exportList = service.list(queryWrapper);
+        final List<BizPhone> list = this.list();
+        try {
+            final String filePath = exportDataToExcel(list);
+            importTask.setFilePath(filePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            taskStatus = TASK_STATUS_ERROR;
+        }finally {
+            importTask.setTaskStatus(taskStatus);
+        }
+
+
+    }
+
+
+    /**
+     * 数据导出为excel
+     * @param dataList
+     * @throws Exception
+     */
+    public String exportDataToExcel(List dataList) throws Exception {
+        Workbook workbook = null;
+        FileOutputStream out = null;
+        File file = null;
+        try {
+            ExportParams exportParams=new ExportParams("报表", "导出人:123" , "title is me!");
+            if(dataList==null || dataList.size()==0){
+                return "";
+            }
+            final Class<?> pojoClass = dataList.get(0).getClass();
+            workbook = ExcelExportUtil.exportExcel(exportParams, pojoClass, dataList, null);
+
+
+            //获取文件名
+            String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl( pojoClass, "download/excelDownload"));
+            SimpleDateFormat format = new SimpleDateFormat("yyyMMddHHmmss");
+            final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +".xls";
+
+            file = new File(filePath);
+            autoCreateDirAndFile(file);
+
+            out = new FileOutputStream(file);
+            workbook.write(out);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(workbook!=null){
+                    workbook.close();
+                }
+                if(out!=null){
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return file.getAbsolutePath();
+    }
 
 }

@@ -5,14 +5,22 @@ import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.io.IOException;
+import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.shiro.SecurityUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.common.system.query.QueryGenerator;
+import org.jeecg.common.system.vo.LoginUser;
+import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.config.JeecgBaseConfig;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
@@ -26,10 +34,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jeecg.modules.demo.wxf.util.BatchNoUtil;
 import org.jeecg.modules.demo.wxf.util.PhoneUtil;
+import org.jeecgframework.poi.excel.ExcelExportUtil;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
+import org.jeecgframework.poi.excel.def.NormalExcelConstants;
+import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecg.common.system.base.controller.JeecgController;
 import org.jeecgframework.poi.excel.entity.result.ExcelImportResult;
+import org.jeecgframework.poi.excel.export.ExcelExportServer;
+import org.jeecgframework.poi.excel.view.JeecgEntityExcelView;
 import org.jeecgframework.poi.util.PoiPublicUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +54,9 @@ import io.swagger.annotations.ApiOperation;
 import org.jeecg.common.aspect.annotation.AutoLog;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 
- /**
+import static org.jeecgframework.poi.excel.entity.enmus.ExcelType.*;
+
+/**
  * @Description: 号码资源表
  * @Author: jeecg-boot
  * @Date:   2024-02-29
@@ -57,8 +72,12 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 
 	@Autowired
 	private IBizMidImportService bizMidImportService;
-	
-	/**
+
+	 @Resource
+	 private JeecgBaseConfig jeecgBaseConfig;
+
+
+	 /**
 	 * 分页列表查询
 	 *
 	 * @param bizPhone
@@ -158,6 +177,26 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 	}
 
     /**
+	 * 默认：
+	 * 1.已成单（客户状态是成功客户）的不提
+	 * 2.黑名单不提
+	 * 3.女不提
+	 *
+	 *
+	 * 查询条件：
+	 * 提取指定批次（输入批次号）
+	 * 入库时间：（选择年月日区间，默认历史到今天，可以修改）
+	 * 取料顺序：（选择随机or入库时间（先近后远））
+	 * 排除城市：（选择不需要的城市）
+	 * 排除接通：
+	 * 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
+	 * 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
+	 * 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
+	 *
+	 * 缺失：提取数量
+	 *
+	 *
+	 *
     * 导出excel
     *
     * @param request
@@ -166,8 +205,39 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
     @RequiresPermissions("wxf:biz_phone:exportXls")
     @RequestMapping(value = "/exportXls")
     public ModelAndView exportXls(HttpServletRequest request, BizPhone bizPhone) {
-        return super.exportXls(request, bizPhone, BizPhone.class, "号码资源表");
+        return exportXlsCus(request, bizPhone, "号码资源表");
     }
+
+	 public ModelAndView exportXlsCus(HttpServletRequest request, BizPhone object,  String title) {
+		 // Step.1 组装查询条件
+		 QueryWrapper<BizPhone> queryWrapper = QueryGenerator.initQueryWrapper(object, request.getParameterMap());
+		 LoginUser sysUser = (LoginUser) SecurityUtils.getSubject().getPrincipal();
+
+		 // 过滤选中数据
+		 String selections = request.getParameter("selections");
+		 if (oConvertUtils.isNotEmpty(selections)) {
+			 List<String> selectionList = Arrays.asList(selections.split(","));
+			 queryWrapper.in("id",selectionList);
+		 }
+		 // Step.2 获取导出数据
+		 List<BizPhone> exportList = service.list(queryWrapper);
+
+		 // Step.3 AutoPoi 导出Excel
+		 ModelAndView mv = new ModelAndView(new JeecgEntityExcelView());
+		 //此处设置的filename无效 ,前端会重更新设置一下
+		 mv.addObject(NormalExcelConstants.FILE_NAME, title);
+		 mv.addObject(NormalExcelConstants.CLASS, BizPhone.class);
+		 //update-begin--Author:liusq  Date:20210126 for：图片导出报错，ImageBasePath未设置--------------------
+		 ExportParams exportParams=new ExportParams(title + "报表", "导出人:" + sysUser.getRealname(), title);
+		 exportParams.setImageBasePath(jeecgBaseConfig.getPath().getUpload());
+		 //update-end--Author:liusq  Date:20210126 for：图片导出报错，ImageBasePath未设置----------------------
+		 mv.addObject(NormalExcelConstants.PARAMS,exportParams);
+		 mv.addObject(NormalExcelConstants.DATA_LIST, exportList);
+		 return mv;
+	 }
+
+
+
 
     /**
       * 通过excel导入数据

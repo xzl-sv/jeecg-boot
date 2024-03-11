@@ -26,6 +26,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -59,6 +60,9 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
 	private IBizExportRecordService bizExportRecordService;
 	 @Resource
 	 private JeecgBaseConfig jeecgBaseConfig;
+
+	 @Autowired
+	 private IBizPhoneService bizPhoneService;
 
 	 /**
 	/**
@@ -167,9 +171,9 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
     * @param bizExportRecord
     */
     @RequiresPermissions("wxf:biz_export_record:exportXls")
-    @RequestMapping(value = "/exportXls")
-    public ModelAndView exportXls(HttpServletRequest request, BizExportRecord bizExportRecord) {
-        return exportXlsCust(request, bizExportRecord, BizExportRecord.class, "提取记录表");
+    @RequestMapping(value = "/exportXlsAsyn")
+    public Result<?> exportXlsAsyn(HttpServletRequest request, BizExportRecord bizExportRecord) {
+		return bizPhoneService.exportExcel(BizExportRecord.class);
     }
 
     /**

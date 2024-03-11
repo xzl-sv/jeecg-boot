@@ -43,7 +43,7 @@ public class ImportSummary {
      */
     @JSONField(format="yyyy-MM-dd HH:mm:ss")
 
-    private Date beginTime;
+    private Date beginTime= new Date();
     @JSONField(format="yyyy-MM-dd HH:mm:ss")
 
     private Date endTime;

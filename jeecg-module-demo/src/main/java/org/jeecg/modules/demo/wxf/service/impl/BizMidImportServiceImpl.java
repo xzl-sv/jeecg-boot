@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.jeecg.modules.demo.wxf.util.Consts.BATCH_INSERT_SIZE;
+
 /**
  * @Description: 导入中间表
  * @Author: jeecg-boot
@@ -54,7 +56,7 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
         Integer shouldInsert = this.baseMapper.checkIfShouldInsert();
         while(shouldInsert>0){
             log.info("should insert size is:{}",shouldInsert);
-            this.baseMapper.insertPhoneFromMidImport();
+            this.baseMapper.insertPhoneFromMidImport(BATCH_INSERT_SIZE);
             shouldInsert = this.baseMapper.checkIfShouldInsert();
         }
 

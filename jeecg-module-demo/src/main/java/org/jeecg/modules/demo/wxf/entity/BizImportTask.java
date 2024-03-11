@@ -8,8 +8,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.jeecg.common.aspect.annotation.Dict;
@@ -66,4 +68,14 @@ public class BizImportTask implements Serializable {
 	@Excel(name = "批次号", width = 15)
     @ApiModelProperty(value = "批次号")
     private java.lang.String batchNo;
+
+    public BizImportTask() {
+    }
+
+    public BizImportTask(String filePath, String taskStatus, String taskType, String batchNo) {
+        this.filePath = filePath;
+        this.taskStatus = taskStatus;
+        this.taskType = taskType;
+        this.batchNo = batchNo;
+    }
 }
