@@ -10,6 +10,7 @@ import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -119,15 +120,17 @@ public class PhoneUtil {
 
     /**
      * 初始化
+     * /Users/qianshihua/Downloads/hui/data/phone-qqzeng.xlsx
      */
 
     private static void init() {
         if(initFlag ==true)return;
         long start = System.currentTimeMillis();
-        Resource resource = new ClassPathResource("excel/phone-qqzeng.xlsx");
+//        Resource resource = new ClassPathResource("excel/phone-qqzeng.xlsx");
         InputStream inputStream = null;
         try {
-            inputStream = resource.getInputStream();
+//            inputStream = resource.getInputStream();
+            inputStream = new FileInputStream("/Users/qianshihua/Downloads/hui/data/phone-qqzeng.xlsx");
         } catch (IOException e) {
            e.printStackTrace();
         }

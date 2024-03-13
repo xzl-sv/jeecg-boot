@@ -1,6 +1,6 @@
 FROM anapsix/alpine-java:8_server-jre_unlimited
 
-MAINTAINER jeecgos@163.com
+MAINTAINER qianshiva
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
