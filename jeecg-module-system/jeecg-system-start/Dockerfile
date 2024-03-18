@@ -13,4 +13,8 @@ EXPOSE 8080
 #ADD ./src/main/resources/jeecg ./config/jeecg
 ADD ./target/jeecg-system-start-3.6.2.jar ./
 
-CMD sleep 60;java -Djava.security.egd=file:/dev/./urandom -jar jeecg-system-start-3.6.2.jar
+COPY entrypoint.sh entrypoint.sh
+
+ENTRYPOINT ["/bin/sh","entrypoint.sh"]
+
+CMD sleep 10;

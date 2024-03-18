@@ -49,6 +49,12 @@
             <artifactId>flyway-core</artifactId>
             <version>7.15.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv-platform</artifactId>
+            <version>1.5.3</version>
+        </dependency>
     </dependencies>
 
     <build>

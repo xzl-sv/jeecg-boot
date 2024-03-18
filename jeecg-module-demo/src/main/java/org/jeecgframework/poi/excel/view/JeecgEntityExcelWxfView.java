@@ -1,11 +1,16 @@
 package org.jeecgframework.poi.excel.view;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jeecg.modules.demo.wxf.entity.BizExportRecord;
+import org.jeecg.modules.demo.wxf.service.IBizExportRecordService;
 import org.jeecgframework.poi.excel.ExcelExportUtil;
+import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.export.ExcelExportServer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import javax.servlet.ServletOutputStream;
@@ -26,10 +31,17 @@ import java.util.Map;
  */
 @Controller("jeecgEntityExcelWxfView")
 public class JeecgEntityExcelWxfView  extends MiniAbstractExcelView {
-
+    private IBizExportRecordService service;
     public JeecgEntityExcelWxfView() {
     }
 
+    public JeecgEntityExcelWxfView(IBizExportRecordService service) {
+        this.service = service;
+    }
+
+
+
+    @Override
     protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
         String codedFileName = "临时文件";
         Workbook workbook = null;
@@ -38,8 +50,16 @@ public class JeecgEntityExcelWxfView  extends MiniAbstractExcelView {
         if (exportFieldStr != null && exportFieldStr != "") {
             exportFields = exportFieldStr.toString().split(",");
         }
-
-        workbook =  new XSSFWorkbook(new FileInputStream(new File("/Users/qianshihua/Documents/develop/code/hui/jeecg-boot/jeecg-module-system/jeecg-system-start/target/classes/upload/excelUpload/BizBalckPhone/20240304195119_64292.XLSX")));
+        final String exportId = (String) model.get("exportId");
+        if(exportId==null || StringUtils.isBlank(exportId.toString())){
+            return ;
+        }
+        String id = exportId.toString();
+        BizExportRecord record = service.getById(id);
+        if(StringUtils.isBlank(record.getFileAddress())){
+            return ;
+        }
+        workbook =  new HSSFWorkbook(new FileInputStream(new File(record.getFileAddress())));
 
         if (model.containsKey("fileName")) {
             codedFileName = (String)model.get("fileName");
