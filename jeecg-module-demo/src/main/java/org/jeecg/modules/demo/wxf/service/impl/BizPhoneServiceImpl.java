@@ -71,6 +71,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     private static final String TASK_STATUS_NORMAL = "2";
     private static final String TASK_STATUS_ERROR = "99";
 
+
+    @Autowired
+    private IBizUtilPhoneService utilPhoneService;
     @Autowired
     private IBizImportBatchService batchService;
     @Autowired
@@ -194,7 +197,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                     final String validPhone = PhoneUtil.detectPhone(p.getPhone());
                     if (validPhone != null) {
                         p.setPhone(validPhone);
-                        PhoneUtil.fillPhoneArea(p);
+                        PhoneUtil.fillPhoneArea(p,utilPhoneService);
                     } else {
                         iterator.remove();
                     }
@@ -645,10 +648,11 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         //        1.已成单（客户状态是成功客户）的不提
         //        2.黑名单不提
         //        3.女不提
-        queryWrapper.ne("client_status","cg");
-//        queryWrapper.ne("black","1");
+        ;
+        queryWrapper.and(w->{w.ne("client_status","cg").or().isNull("client_status");});
         queryWrapper.and(w->{w.eq("black","0").or().isNull("black");});
-        queryWrapper.ne("gender","2");
+        queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));
+
         //        batchNo 提取指定批次（输入批次号）
         if(param.get("batchNo")!=null && StringUtils.isNotBlank(((String[])param.get("batchNo"))[0]))queryWrapper.eq("batchNo",param.get("batchNo").toString());
 //        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）

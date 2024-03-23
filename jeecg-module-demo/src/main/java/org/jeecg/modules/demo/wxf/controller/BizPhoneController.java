@@ -10,6 +10,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -93,7 +94,13 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
-		QueryWrapper<BizPhone> queryWrapper = QueryGenerator.initQueryWrapper(bizPhone, req.getParameterMap());
+		final Map<String, String[]> parameterMap = req.getParameterMap();
+		final String provinceCode = bizPhone.getProvinceCode();
+		bizPhone.setProvinceCode("");
+		QueryWrapper<BizPhone> queryWrapper = QueryGenerator.initQueryWrapper(bizPhone, parameterMap);
+		if(StringUtils.isNotBlank(provinceCode)){
+			queryWrapper.eq("province_code",provinceCode.substring(0,provinceCode.length()-2)+"01");
+		}
 		Page<BizPhone> page = new Page<BizPhone>(pageNo, pageSize);
 		IPage<BizPhone> pageList = bizPhoneService.page(page, queryWrapper);
 		return Result.OK(pageList);

@@ -84,6 +84,15 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
 		QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(bizExportRecord, req.getParameterMap());
 		Page<BizExportRecord> page = new Page<BizExportRecord>(pageNo, pageSize);
 		IPage<BizExportRecord> pageList = bizExportRecordService.page(page, queryWrapper);
+
+
+		final String[] rwlxes = parameterMap.get("rwlx");
+		if(rwlxes!=null && rwlxes.length>0 && rwlxes[0].equalsIgnoreCase("tj")){
+			//选择了提交取数操作
+			bizPhoneService.submitExportTask(BizExportRecord.class,o);
+		}
+
+
 		return Result.OK(pageList);
 	}
 

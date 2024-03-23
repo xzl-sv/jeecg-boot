@@ -66,6 +66,7 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
     @Transactional(rollbackFor = Exception.class)
     public void insertBlackPhoneFromMidImport(){
         this.baseMapper.insertBlackPhoneFromMidImport();
+        this.baseMapper.updateBlackStatus();
     }
 
 

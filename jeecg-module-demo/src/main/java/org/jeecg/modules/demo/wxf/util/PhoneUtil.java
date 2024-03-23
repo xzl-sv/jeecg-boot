@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import org.jeecg.modules.demo.wxf.entity.BizUtilPhone;
+import org.jeecg.modules.demo.wxf.service.IBizUtilPhoneService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.springframework.core.io.ClassPathResource;
@@ -95,6 +96,12 @@ public class PhoneUtil {
         final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
         phone.setProvinceCode(areaCode==null?"": sb.toString());
     }
+    public static void fillPhoneArea(BizMidImport phone, IBizUtilPhoneService bizUtilPhoneService){
+        initFromDb(bizUtilPhoneService);
+        fillPhoneArea(phone);
+    }
+
+
 
     /**
      * 查找号段的所属地，查不到返回空白对象(非null)
@@ -102,7 +109,7 @@ public class PhoneUtil {
      * @return
      */
     public static void fillPhoneArea(BizMidImport phone){
-        init();
+//        init();
         if(StringUtils.isBlank(phone.getPhone()) || phone.getPhone().trim().length()<7){
             return ;
         }
@@ -117,6 +124,47 @@ public class PhoneUtil {
         phone.setProvinceCode(areaCode==null?"": sb.toString());
     }
 
+    private static void initFromDb(IBizUtilPhoneService bizUtilPhoneService) {
+        if(initFlag ==true)return;
+        long start = System.currentTimeMillis();
+        List<BizUtilPhone> list = null;
+//        Resource resource = new ClassPathResource("excel/phone-qqzeng.xlsx");
+//        InputStream inputStream = null;
+//        try {
+////            inputStream = resource.getInputStream();
+//            inputStream = new FileInputStream("/Users/qianshihua/Downloads/hui/data/phone-qqzeng.xlsx");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        ImportParams params = new ImportParams();
+//        params.setTitleRows(0);
+//        params.setHeadRows(1);
+//        params.setNeedSave(true);
+//        try {
+//            list = ExcelImportUtil.importExcel(inputStream, BizUtilPhone.class, params);
+//            for (BizUtilPhone p:list){
+//                phoneMap.put(p.getPhone(),p);
+//            }
+//            log.info("加载号码归属地,数量："+list.size()+" ,消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
+//            initFlag =true;
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }finally {
+//            try {
+//                inputStream.close();
+//            } catch (IOException e) {
+//            }
+//        }
+
+
+        list = bizUtilPhoneService.list();
+        for (BizUtilPhone p:list){
+            phoneMap.put(p.getPhone(),p);
+        }
+        log.info("加载号码归属地,数量："+list.size()+" ,消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
+        initFlag =true;
+    }
 
     /**
      * 初始化

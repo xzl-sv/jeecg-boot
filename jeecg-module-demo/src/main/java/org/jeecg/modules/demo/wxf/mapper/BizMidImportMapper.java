@@ -2,10 +2,7 @@ package org.jeecg.modules.demo.wxf.mapper;
 
 import java.util.List;
 
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
@@ -48,6 +45,9 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
             "            select  min(m.id), m.phone,now(),'admin',now()  from biz_mid_import m left join biz_balck_phone p on p.phone=m.phone " +
             "            where p.phone is null group by  m.phone ")
     void insertBlackPhoneFromMidImport();
+
+    @Update("update biz_phone p,biz_balck_phone bp set p.black='1' where p.phone=bp.phone and (p.black is null or p.black='0') ")
+    void updateBlackStatus();
 
     @Delete("TRUNCATE table biz_mid_import")
     void truncateTable();
