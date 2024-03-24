@@ -4,18 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Charsets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.ImportExcelFilter;
-import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
 import org.jeecg.modules.demo.wxf.entity.*;
 import org.jeecg.modules.demo.wxf.mapper.BizPhoneMapper;
@@ -626,115 +623,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         final Map<String, String[]> param = JSON.parseObject(importTask.getTaskSummary(), new TypeReference<Map<String, String[]>>() {
         });
 
-        // Step.1 组装查询条件
-        QueryWrapper<BizPhone> queryWrapper =  new QueryWrapper<BizPhone>();
-
-//        默认：
-//        1.已成单（客户状态是成功客户）的不提
-//        2.黑名单不提
-//        3.女不提  2024-03-24 22:49:30改成前台传参
-//        查询条件：
-//        batchNo 提取指定批次（输入批次号）
-//        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
-//        tqsx 取料顺序：（选择随机or入库时间（先近后远））
-//        excludeCity 排除城市：（选择不需要的城市）
-//        排除接通：
-//        jtcs 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
-//        wjt 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
-//        tqsj 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
-//        tqsl 缺失：提取数量
-
-        //        默认：
-        //        1.已成单（客户状态是成功客户）的不提
-        //        2.黑名单不提
-        //        3.女不提 2024-03-24 22:49:30改成前台传参
-        ;
-        queryWrapper.and(w->{w.ne("client_status","cg").or().isNull("client_status");});
-        queryWrapper.and(w->{w.eq("black","0").or().isNull("black");});
-//        queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));//2024-03-24 22:49:30改成前台传参
-
-        //男1 女2  非女99
-        if(param.get("gender")!=null && StringUtils.isNotBlank(((String[])param.get("gender"))[0])) {
-            final String gender = ((String[])param.get("gender"))[0];
-            if(gender.equalsIgnoreCase("99")){
-                //非女
-                queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));//2024-03-24 22:49:30改成前台传参
-            }else{
-                //男或者女
-                queryWrapper.eq("gender",gender);
-            }
-
-        }
-
-        //        batchNo 提取指定批次（输入批次号）
-        if(param.get("batchNo")!=null && StringUtils.isNotBlank(((String[])param.get("batchNo"))[0]))queryWrapper.eq("batch_no",param.get("batchNo").toString());
-//        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
-//        if(param.get("createTime")!=null && StringUtils.isNotBlank(param.get("batchNo").toString()))queryWrapper.eq("batchNo",param.get("batchNo").toString());
-        //        tqsx 取料顺序：（选择随机or入库时间（先近后远））
-        //提取顺序是否按照入库时间，否：随机，是：根据入库时间
-        boolean isOrderByInserTime = false;
-        if(param.get("tqsx")!=null && StringUtils.equalsIgnoreCase("rksj",((String[])param.get("tqsx"))[0])){
-            queryWrapper.orderByDesc("create_time");
-            isOrderByInserTime = true;
-        }
-//        city_exclude 排除城市：（选择不需要的城市）excludeCity
-        if(param.get("excludeCity")!=null && StringUtils.isNotBlank(((String[])param.get("excludeCity"))[0])) {
-            final String cityExclude = ((String[])param.get("excludeCity"))[0];
-            List<String> citys = new ArrayList<>();
-            final String[] split = cityExclude.split(",");
-            for (int i = 0; i < split.length; i++) {
-                String cityShort = split[i];
-                if(cityShort.length()<6){
-                    continue;
-                }
-//                final StringBuffer citylong = new StringBuffer("").append(cityShort.substring(0, 2)).append("0000,").append(cityShort.substring(0,4)).append("00,").append(cityShort.substring(0, 5)).append("1");
-//                citys.add(citylong.toString());
-                //2024-03-24 22:58:15 城市改成短码了
-                citys.add(cityShort);
-            }
-            if(citys.size()>0){
-                queryWrapper.notIn("city_code",citys);
-            }
-        }
-//        excludeProvince 排除省份：（选择不需要的省份）
-        if(param.get("excludeProvince")!=null && StringUtils.isNotBlank(((String[])param.get("excludeProvince"))[0])) {
-            final String province_exclude = ((String[])param.get("excludeProvince"))[0];
-            List<String> ps = new ArrayList<>();
-            final String[] split = province_exclude.split(",");
-            for (int i = 0; i < split.length; i++) {
-                String p = split[i];
-                if(p.length()<6){
-                    continue;
-                }
-                ps.add(p);
-            }
-            if(ps.size()>0){
-                queryWrapper.notIn("province_code",ps);
-            }
-        }
-        //提取时间范围createTime
-        if(param.get("createTime[]")!=null  && StringUtils.isNotBlank(((String[])param.get("createTime[]"))[0])  && ((String[])param.get("createTime[]")).length>1 ) {
-            final String createTimeBegin = ((String[])param.get("createTime[]"))[0];
-            final String createTimeEnd = ((String[])param.get("createTime[]"))[1];
-            queryWrapper.between("create_time",createTimeBegin,createTimeEnd);
-        }
-
-//        jtcs 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
-        if(param.get("jtcs")!=null && StringUtils.isNotBlank(((String[])param.get("jtcs"))[0])) {
-            queryWrapper.le("on_count",Integer.parseInt(((String[])param.get("jtcs"))[0]));
-        }
-//        wjt 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
-        if(param.get("wjt")!=null && StringUtils.isNotBlank(((String[])param.get("wjt"))[0])) {
-            final int daysRecent = Integer.parseInt(((String[])param.get("wjt"))[0]);
-            final Date dateBeforeDays = DateUtils.addDays(new Date(), daysRecent * -1);
-            queryWrapper.and(w->{w.lt("recent_on_time", dateBeforeDays).or().isNull("recent_on_time");});
-        }
-//        tqsj 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
-        if(param.get("tqsj")!=null && StringUtils.isNotBlank(((String[])param.get("tqsj"))[0])) {
-            final int daysRecent = Integer.parseInt(((String[])param.get("tqsj"))[0]);
-            final Date dateBeforeDays = DateUtils.addDays(new Date(), daysRecent * -1);
-            queryWrapper.and(w->{w.lt("last_export_time", dateBeforeDays).or().isNull("last_export_time");});
-        }
+        QueryWrapper<BizPhone> queryWrapper = buildQwWhenExport(param);
 //        tqsl 缺失：提取数量
         //默认提取数量10000
         int tqsl = DEFAULT_EXPORT_SIZE;
@@ -742,6 +631,15 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             tqsl = Integer.parseInt(((String[])param.get("tqsl"))[0]);
         }
         List<BizPhone> list = null;
+
+        
+
+        //提取顺序是否按照入库时间，否：随机，是：根据入库时间
+        boolean isOrderByInserTime = false;
+        if(param.get("tqsx")!=null && StringUtils.equalsIgnoreCase("rksj",((String[])param.get("tqsx"))[0])){
+            queryWrapper.orderByDesc("create_time");
+            isOrderByInserTime = true;
+        }
 
         if(isOrderByInserTime){
             //非随机，只需要取符合条件的数量即可
@@ -789,6 +687,120 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }
 
 
+    }
+
+    /**
+     *
+     * @param param request中的参数
+     * @return
+     */
+    @NotNull
+    public static QueryWrapper<BizPhone> buildQwWhenExport(Map<String, String[]> param) {
+        // Step.1 组装查询条件
+        QueryWrapper<BizPhone> queryWrapper =  new QueryWrapper<BizPhone>();
+
+//        默认：
+//        1.已成单（客户状态是成功客户）的不提
+//        2.黑名单不提
+//        3.女不提  2024-03-24 22:49:30改成前台传参
+//        查询条件：
+//        batchNo 提取指定批次（输入批次号）
+//        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
+//        tqsx 取料顺序：（选择随机or入库时间（先近后远））
+//        excludeCity 排除城市：（选择不需要的城市）
+//        排除接通：
+//        jtcs 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
+//        wjt 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
+//        tqsj 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
+//        tqsl 缺失：提取数量
+
+        //        默认：
+        //        1.已成单（客户状态是成功客户）的不提
+        //        2.黑名单不提
+        //        3.女不提 2024-03-24 22:49:30改成前台传参
+        ;
+        queryWrapper.and(w->{w.ne("client_status","cg").or().isNull("client_status");});
+        queryWrapper.and(w->{w.eq("black","0").or().isNull("black");});
+//        queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));//2024-03-24 22:49:30改成前台传参
+
+        //男1 女2  非女99
+        if(param.get("gender")!=null && StringUtils.isNotBlank(((String[]) param.get("gender"))[0])) {
+            final String gender = ((String[]) param.get("gender"))[0];
+            if(gender.equalsIgnoreCase("99")){
+                //非女
+                queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));//2024-03-24 22:49:30改成前台传参
+            }else{
+                //男或者女
+                queryWrapper.eq("gender",gender);
+            }
+
+        }
+
+        //        batchNo 提取指定批次（输入批次号）
+        if(param.get("batchNo")!=null && StringUtils.isNotBlank(((String[]) param.get("batchNo"))[0]))queryWrapper.eq("batch_no", param.get("batchNo").toString());
+//        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
+//        if(param.get("createTime")!=null && StringUtils.isNotBlank(param.get("batchNo").toString()))queryWrapper.eq("batchNo",param.get("batchNo").toString());
+        //        tqsx 取料顺序：（选择随机or入库时间（先近后远））
+
+//        city_exclude 排除城市：（选择不需要的城市）excludeCity
+        if(param.get("excludeCity")!=null && StringUtils.isNotBlank(((String[]) param.get("excludeCity"))[0])) {
+            final String cityExclude = ((String[]) param.get("excludeCity"))[0];
+            List<String> citys = new ArrayList<>();
+            final String[] split = cityExclude.split(",");
+            for (int i = 0; i < split.length; i++) {
+                String cityShort = split[i];
+                if(cityShort.length()<6){
+                    continue;
+                }
+//                final StringBuffer citylong = new StringBuffer("").append(cityShort.substring(0, 2)).append("0000,").append(cityShort.substring(0,4)).append("00,").append(cityShort.substring(0, 5)).append("1");
+//                citys.add(citylong.toString());
+                //2024-03-24 22:58:15 城市改成短码了
+                citys.add(cityShort);
+            }
+            if(citys.size()>0){
+                queryWrapper.notIn("city_code",citys);
+            }
+        }
+//        excludeProvince 排除省份：（选择不需要的省份）
+        if(param.get("excludeProvince")!=null && StringUtils.isNotBlank(((String[]) param.get("excludeProvince"))[0])) {
+            final String province_exclude = ((String[]) param.get("excludeProvince"))[0];
+            List<String> ps = new ArrayList<>();
+            final String[] split = province_exclude.split(",");
+            for (int i = 0; i < split.length; i++) {
+                String p = split[i];
+                if(p.length()<6){
+                    continue;
+                }
+                ps.add(p);
+            }
+            if(ps.size()>0){
+                queryWrapper.notIn("province_code",ps);
+            }
+        }
+        //提取时间范围createTime
+        if(param.get("createTime[]")!=null  && StringUtils.isNotBlank(((String[]) param.get("createTime[]"))[0])  && ((String[]) param.get("createTime[]")).length>1 ) {
+            final String createTimeBegin = ((String[]) param.get("createTime[]"))[0];
+            final String createTimeEnd = ((String[]) param.get("createTime[]"))[1];
+            queryWrapper.between("create_time",createTimeBegin,createTimeEnd);
+        }
+
+//        jtcs 接通次数不大于（N）次（填写框输入）：外呼记录里次数不大于N次的可以提
+        if(param.get("jtcs")!=null && StringUtils.isNotBlank(((String[]) param.get("jtcs"))[0])) {
+            queryWrapper.le("on_count",Integer.parseInt(((String[]) param.get("jtcs"))[0]));
+        }
+//        wjt 近（N）天无接通（填写框输入）：库里记录号码最近的外呼时间，近N天内无接通的数据可以提
+        if(param.get("wjt")!=null && StringUtils.isNotBlank(((String[]) param.get("wjt"))[0])) {
+            final int daysRecent = Integer.parseInt(((String[]) param.get("wjt"))[0]);
+            final Date dateBeforeDays = DateUtils.addDays(new Date(), daysRecent * -1);
+            queryWrapper.and(w->{w.lt("recent_on_time", dateBeforeDays).or().isNull("recent_on_time");});
+        }
+//        tqsj 近（N）天数据不取（填写框输入）：库里记录号码最近的提取时间，近N天已经提过的数据不取
+        if(param.get("tqsj")!=null && StringUtils.isNotBlank(((String[]) param.get("tqsj"))[0])) {
+            final int daysRecent = Integer.parseInt(((String[]) param.get("tqsj"))[0]);
+            final Date dateBeforeDays = DateUtils.addDays(new Date(), daysRecent * -1);
+            queryWrapper.and(w->{w.lt("last_export_time", dateBeforeDays).or().isNull("last_export_time");});
+        }
+        return queryWrapper;
     }
 
 

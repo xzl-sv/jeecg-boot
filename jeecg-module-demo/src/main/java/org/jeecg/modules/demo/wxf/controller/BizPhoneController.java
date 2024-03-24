@@ -10,6 +10,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.formula.functions.T;
@@ -23,6 +24,7 @@ import org.jeecg.common.system.vo.LoginUser;
 import org.jeecg.common.util.oConvertUtils;
 import org.jeecg.config.JeecgBaseConfig;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
+import org.jeecg.modules.demo.wxf.entity.BizExportRecord;
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import org.jeecg.modules.demo.wxf.service.IBizMidImportService;
@@ -33,6 +35,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.service.impl.BizPhoneServiceImpl;
 import org.jeecg.modules.demo.wxf.util.BatchNoUtil;
 import org.jeecg.modules.demo.wxf.util.PhoneUtil;
 import org.jeecgframework.poi.excel.ExcelExportUtil;
@@ -78,7 +81,36 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 	 private JeecgBaseConfig jeecgBaseConfig;
 
 
-	 /**
+	@ApiOperation(value="号码资源表-分页列表查询", notes="号码资源表-分页列表查询")
+	@GetMapping(value = "/listExport")
+	public Result<IPage<BizPhone>> listExport(BizPhone bizPhone,
+												 @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
+												 @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
+												 HttpServletRequest req) {
+
+
+		final Map<String, String[]> parameterMap = req.getParameterMap();
+		final String o = JSON.toJSONString(parameterMap);
+
+		final QueryWrapper<BizPhone> queryWrapper = BizPhoneServiceImpl.buildQwWhenExport(parameterMap);
+
+		Page<BizPhone> page = new Page<BizPhone>(pageNo, pageSize);
+		IPage<BizPhone> pageList = bizPhoneService.page(page, queryWrapper);
+
+
+
+		final String[] rwlxes = parameterMap.get("rwlx");
+		if(rwlxes!=null && rwlxes.length>0 && rwlxes[0].equalsIgnoreCase("tj")){
+			//选择了提交取数操作
+			bizPhoneService.submitExportTask(BizExportRecord.class,o);
+		}
+
+
+		return Result.OK(pageList);
+	}
+
+
+	/**
 	 * 分页列表查询
 	 *
 	 * @param bizPhone
