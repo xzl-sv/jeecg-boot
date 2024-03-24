@@ -81,4 +81,11 @@ public class BizImportBatch implements Serializable {
 	@Excel(name = "非法数据", width = 15)
     @ApiModelProperty(value = "非法数据")
     private java.lang.Integer invalidNum;
+
+
+    /**备注*/
+    @Excel(name = "备注", width = 500)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String bz;
+
 }

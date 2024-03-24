@@ -63,10 +63,16 @@ public class BizPhone implements Serializable {
 	@Excel(name = "地址", width = 15)
     @ApiModelProperty(value = "地址")
     private java.lang.String address;
-	/**区域*/
-	@Excel(name = "区域", width = 15)
-    @ApiModelProperty(value = "区域")
+	/**省*/
+	@Excel(name = "省", width = 15,dicCode = "province")
+    @Dict(dicCode = "province")
+    @ApiModelProperty(value = "省")
     private java.lang.String provinceCode;
+	/**市*/
+	@Excel(name = "市", width = 15,dicCode = "city")
+    @Dict(dicCode = "city")
+    @ApiModelProperty(value = "市")
+    private java.lang.String cityCode;
 	/**批次号*/
 	@Excel(name = "批次号", width = 15)
     @ApiModelProperty(value = "批次号")

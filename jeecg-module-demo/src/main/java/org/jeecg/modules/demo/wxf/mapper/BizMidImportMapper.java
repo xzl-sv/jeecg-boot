@@ -30,8 +30,8 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
             "where p.phone is null ")
     public Integer phoneValueNum();
 
-    @Insert("insert into biz_phone (id,province_code,batch_no,phone,create_time,create_by) " +
-            "select  min(m.id),min(m.province_code),min(m.batch_no),  m.phone,now(),'admin' from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
+    @Insert("insert into biz_phone (id,province_code,city_code,batch_no,phone,create_time,create_by,client_name,client_status,address,gender) " +
+            "select  min(m.id),min(m.province_code),min(m.city_code),min(m.batch_no),  m.phone,now(),'admin', min(m.client_name), min(m.client_status), min(m.address), min(m.gender)from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
             "where p.phone is null group by  m.phone limit #{batchNo,jdbcType=INTEGER}")
     void insertPhoneFromMidImport(@Param("batchNo")Integer batchNo);
 
@@ -41,8 +41,8 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
 
 
 
-    @Insert(" insert into biz_balck_phone (id,phone,create_time,create_by,import_time) " +
-            "            select  min(m.id), m.phone,now(),'admin',now()  from biz_mid_import m left join biz_balck_phone p on p.phone=m.phone " +
+    @Insert(" insert into biz_balck_phone (id,phone,create_time,create_by,import_time,bz) " +
+            "            select  min(m.id), m.phone,now(),'admin',now(),max(m.bz)  from biz_mid_import m left join biz_balck_phone p on p.phone=m.phone " +
             "            where p.phone is null group by  m.phone ")
     void insertBlackPhoneFromMidImport();
 

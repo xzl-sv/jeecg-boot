@@ -93,8 +93,11 @@ public class PhoneUtil {
             return;
         }
 
-        final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
-        phone.setProvinceCode(areaCode==null?"": sb.toString());
+//        final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
+//        phone.setProvinceCode(areaCode==null?"": sb.toString());
+
+        phone.setProvinceCode(new StringBuffer(areaCode.substring(0, 2)).append("0000").toString());
+        phone.setCityCode(new StringBuffer(areaCode.substring(0,4)).append("00,").toString());
     }
     public static void fillPhoneArea(BizMidImport phone, IBizUtilPhoneService bizUtilPhoneService){
         initFromDb(bizUtilPhoneService);
@@ -115,13 +118,16 @@ public class PhoneUtil {
         }
         String phonePre = phone.getPhone().trim().substring(0,7);
         final BizUtilPhone bizUtilPhone = phoneMap.get(phonePre) == null ? new BizUtilPhone() : phoneMap.get(phonePre);
-        final String areaCode = bizUtilPhone.getAreaCode();
+        final String areaCode = bizUtilPhone.getCity();
         if(areaCode==null){
             return;
         }
 
-        final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
-        phone.setProvinceCode(areaCode==null?"": sb.toString());
+//        final StringBuffer sb = new StringBuffer("").append(areaCode.substring(0, 2)).append("0000,").append(areaCode.substring(0,4)).append("00,").append(areaCode.substring(0, 5)).append("1");
+//        phone.setProvinceCode(areaCode==null?"": sb.toString());
+
+        phone.setProvinceCode(new StringBuffer(areaCode.substring(0, 2)).append("0000").toString());
+        phone.setCityCode(new StringBuffer(areaCode.substring(0, 4)).append("00").toString());
     }
 
     private static void initFromDb(IBizUtilPhoneService bizUtilPhoneService) {

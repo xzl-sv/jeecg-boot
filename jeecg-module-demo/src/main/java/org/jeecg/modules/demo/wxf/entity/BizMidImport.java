@@ -44,24 +44,28 @@ public class BizMidImport implements Serializable {
 	@Excel(name = "地址", width = 15)
     @ApiModelProperty(value = "地址")
     private java.lang.String address;
-	/**provinceCode*/
-	@Excel(name = "provinceCode", width = 15)
-    @ApiModelProperty(value = "provinceCode")
+    /**省*/
+    @Excel(name = "省", width = 15,dicCode = "province")
+    @ApiModelProperty(value = "省")
     private java.lang.String provinceCode;
+    /**市*/
+    @Excel(name = "市", width = 15,dicCode = "4")
+    @ApiModelProperty(value = "市")
+    private java.lang.String cityCode;
 	/**batchNo*/
 	@Excel(name = "batchNo", width = 15)
     @ApiModelProperty(value = "batchNo")
     private java.lang.String batchNo;
 	/**gender*/
-	@Excel(name = "gender", width = 15)
+    @Excel(name = "性别", width = 15, dicCode = "sex")
     @ApiModelProperty(value = "gender")
     private java.lang.String gender;
 	/**black*/
-	@Excel(name = "black", width = 15)
+    @Excel(name = "是否黑名单", width = 15, dicCode = "yn")
     @ApiModelProperty(value = "black")
     private java.lang.String black;
 	/**clientStatus*/
-	@Excel(name = "clientStatus", width = 15)
+    @Excel(name = "客户状态", width = 15, dicCode = "client_status")
     @ApiModelProperty(value = "clientStatus")
     private java.lang.String clientStatus;
 	/**lastExportTime*/
@@ -74,4 +78,10 @@ public class BizMidImport implements Serializable {
 	@Excel(name = "客户号码", width = 15)
     @ApiModelProperty(value = "客户号码")
     private java.lang.String phone;
+
+
+    /**备注*/
+    @Excel(name = "备注", width = 15)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String bz;
 }

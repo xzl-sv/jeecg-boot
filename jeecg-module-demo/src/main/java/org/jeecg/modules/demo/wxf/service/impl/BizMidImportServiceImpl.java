@@ -52,7 +52,7 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void insertPhoneFromMidImport(){
+    public void  insertPhoneFromMidImport(){
         Integer shouldInsert = this.baseMapper.checkIfShouldInsert();
         while(shouldInsert>0){
             log.info("should insert size is:{}",shouldInsert);
