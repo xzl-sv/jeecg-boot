@@ -4,10 +4,8 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.math.BigDecimal;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.TableLogic;
+
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -79,9 +77,25 @@ public class BizMidImport implements Serializable {
     @ApiModelProperty(value = "客户号码")
     private java.lang.String phone;
 
+    @Excel(name = "被叫号码", width = 15)
+    @TableField(exist = false)
+    private java.lang.String phoneBj;
+
+    @Excel(name = "呼入被叫", width = 15)
+    @TableField(exist = false)
+    private java.lang.String phoneHrbj;
+
 
     /**备注*/
     @Excel(name = "备注", width = 15)
     @ApiModelProperty(value = "备注")
     private java.lang.String bz;
+
+    public void autoFillPhone(){
+        if(phoneBj!=null && phoneBj.length()>0){
+            phone=phoneBj;
+        }else if(phoneHrbj!=null && phoneHrbj.length()>0){
+            phone=phoneHrbj;
+        }
+    }
 }

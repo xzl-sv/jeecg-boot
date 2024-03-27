@@ -84,4 +84,7 @@ public class BizUtilPhone implements Serializable {
 	@Excel(name = "区域编码", width = 15)
     @ApiModelProperty(value = "区域编码")
     private java.lang.String areaCode;
+    private java.lang.String pn;
+    private java.lang.String cn;
+
 }

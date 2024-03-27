@@ -1,13 +1,12 @@
 package org.jeecg.modules.demo.wxf.entity;
 
+import java.beans.Transient;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.math.BigDecimal;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.TableLogic;
+
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -102,6 +101,8 @@ public class BizPhone implements Serializable {
 	@Excel(name = "客户号码", width = 15)
     @ApiModelProperty(value = "客户号码")
     private java.lang.String phone;
+
+
 	/**接通次数*/
 	@Excel(name = "接通次数", width = 15)
     @ApiModelProperty(value = "接通次数")
@@ -124,6 +125,16 @@ public class BizPhone implements Serializable {
 	@Excel(name = "接通率", width = 15)
     @ApiModelProperty(value = "接通率")
     private java.lang.Double onRate;
+    /**接通率*/
+    @Excel(name = "删除状态", width = 15,dicCode = "del_flag")
+    @ApiModelProperty(value = "删除状态")
+    @Dict(dicCode = "del_flag")
+    private String delFlag;
+
+    @Excel(name = "质检备注", width = 15)
+    @ApiModelProperty(value = "质检备注")
+    @TableField(exist = false)
+    private String zjbz;
 
 
 

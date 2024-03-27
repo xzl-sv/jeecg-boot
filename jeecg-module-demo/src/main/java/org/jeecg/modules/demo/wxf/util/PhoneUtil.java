@@ -128,6 +128,9 @@ public class PhoneUtil {
 
         phone.setProvinceCode(new StringBuffer(areaCode.substring(0, 2)).append("0000").toString());
         phone.setCityCode(new StringBuffer(areaCode.substring(0, 4)).append("00").toString());
+
+        phone.setAddress(bizUtilPhone.getPn()+(bizUtilPhone.getPn()!=null && !bizUtilPhone.getPn().contains("市")?bizUtilPhone.getCn():""));
+
     }
 
     private static void initFromDb(IBizUtilPhoneService bizUtilPhoneService) {

@@ -43,6 +43,16 @@ public interface BizCallRecordsMapper extends BaseMapper<BizCallRecords> {
             "          where p.phone=cr.phone and cr.batch_no=#{batchNo,jdbcType=VARCHAR} and cr.client_status ='cg'")
     void updateCgStatus(@Param("batchNo")String batchNo);
 
+    @Update("update  biz_phone p , biz_call_records cr set p.address=cr.client_address  " +
+            "                      where p.phone=cr.phone and cr.batch_no=#{batchNo,jdbcType=VARCHAR} and p.address<>cr.client_address    ")
+    void updateAddressStatus(@Param("batchNo")String batchNo);
+
+
+    @Update("update  biz_phone p , biz_call_records cr   set p.client_name=cr.client_name  " +
+            "                      where p.phone=cr.phone and cr.batch_no=#{batchNo,jdbcType=VARCHAR} and    p.client_name<>cr.client_name   ")
+    void updateClientName(@Param("batchNo")String batchNo);
+
+
     /**
      * 更新接通总次数+最近接通时间
      */

@@ -38,7 +38,7 @@ public interface BizTransferRecordTmpMapper extends BaseMapper<BizTransferRecord
     /**
      * 更新号码资源表中的地址
      */
-    @Update("update biz_phone p ,biz_transfer_record_tmp rt set p.address=rt.client_address ,p.price=rt.price " +
+    @Update("update biz_phone p ,biz_transfer_record_tmp rt set p.address=rt.client_address ,p.price=rt.price ,p.client_name=rt.client_name " +
             "where p.phone=rt.phone   ")
     void updatePhoneTransferStatusFromTmp();
 

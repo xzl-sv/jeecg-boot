@@ -11,11 +11,9 @@ import com.google.common.base.Charsets;
 import com.opencsv.CSVReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jeecg.common.api.vo.Result;
@@ -160,6 +158,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             throw new RuntimeException(e);
         }
     }
+    static final String UTF8_BOM = "\uFEFF";
 
     private static String formatDate(String mayDate){
         try {
@@ -173,6 +172,10 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             }
             return DateUtil.formatDateTime(parse);
         } catch (Exception e) {
+
+            if (mayDate!=null && mayDate.startsWith(UTF8_BOM)) {
+                mayDate = mayDate.substring(1);
+            }
             return mayDate;
         }
     }
@@ -224,6 +227,10 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         return Result.ok("任务提交成功，稍后将自动执行导出操作！");
     }
 
+    @Override
+    public void delBatch(String batchNo) {
+        baseMapper.delBatch(batchNo);
+    }
 
 
     private String translateTaskType(Class clazz){
@@ -457,6 +464,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 //                    final Workbook workbook = objectExcelImportResult.getWorkbook();
                 //原始的excel数据
                 list = objectExcelImportResult.getList();
+                list.forEach(p->p.autoFillPhone());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -473,6 +481,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
      * 执行导入通话记录
      * @param importTask
      */
+    @Transactional(rollbackFor = Exception.class)
     public void doimportCallRecord(BizImportTask importTask) {
 
         final String batchno = importTask.getBatchNo();
@@ -493,12 +502,11 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             if(file.exists()){
                 inputstream = new FileInputStream(file);
                 final ExcelImportResult<BizCallRecords> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizCallRecords.class, params);
-                final Workbook workbook = objectExcelImportResult.getWorkbook();
+//                final Workbook workbook = objectExcelImportResult.getWorkbook();
                 //原始的excel数据
                 List<BizCallRecords> list = objectExcelImportResult.getList();
-                final int excelTotalSize = list.size();
                 list.forEach(a->a.setBatchNo(batchno));
-                final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
+//                final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
                 //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
 
                 long start = System.currentTimeMillis();
@@ -506,6 +514,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //1，更新客户类型：成功客户、失败客户
                 //2，更新客户姓名（非空）
+                //3.更新地址，2024-03-27 20:17:10 新增
                 callRecordsService.updatePhoneByCallRecords(batchno);
                 importSummary.setTotal(list.size());
                 //非法的数据=excel数据 - 识别出来的号码总数
@@ -537,6 +546,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
      * 执行导入通话记录
      * @param importTask
      */
+    @Transactional(rollbackFor = Exception.class)
+
     public void doimportTransferRecord(BizImportTask importTask) {
 
         final String batchno = importTask.getBatchNo();
@@ -598,6 +609,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     }
 
 
+    @Transactional(rollbackFor = Exception.class)
 
     public void doimportBlackPhone(BizImportTask importTask) {
 
@@ -784,6 +796,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         //        2.黑名单不提
         //        3.女不提 2024-03-24 22:49:30改成前台传参
         ;
+        queryWrapper.eq("del_flag","0");
         queryWrapper.and(w->{w.ne("client_status","cg").or().isNull("client_status");});
         queryWrapper.and(w->{w.eq("black","0").or().isNull("black");});
 //        queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));//2024-03-24 22:49:30改成前台传参
@@ -879,12 +892,12 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         FileOutputStream out = null;
         File file = null;
         try {
-            ExportParams exportParams=new ExportParams("报表", "导出人:123" , "title is me!");
+            ExportParams exportParams=new ExportParams(null, null , "sheet1");
             if(dataList==null || dataList.size()==0){
                 return "";
             }
             final Class<?> pojoClass = dataList.get(0).getClass();
-            workbook = ExcelExportUtil.exportExcel(exportParams, pojoClass, dataList, null);
+            workbook = ExcelExportUtil.exportExcel(exportParams, pojoClass, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"});
 
 
             //获取文件名
@@ -913,6 +926,19 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             }
         }
         return file.getAbsolutePath();
+    }
+
+
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delBatchs(List<String> ids){
+        final List<BizImportBatch> bizImportBatches = batchService.listByIds(ids);
+        batchService.removeByIds(ids);
+        for (BizImportBatch bib :bizImportBatches){
+            delBatch(bib.getBatchNo());
+        }
+
     }
 
 }

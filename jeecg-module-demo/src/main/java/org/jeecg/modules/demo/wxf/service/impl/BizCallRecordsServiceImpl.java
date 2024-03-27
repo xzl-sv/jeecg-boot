@@ -30,6 +30,8 @@ public class BizCallRecordsServiceImpl extends ServiceImpl<BizCallRecordsMapper,
         callRecordsMapper.updateGender(batchNo);
         callRecordsMapper.updateSbStatus(batchNo);
         callRecordsMapper.updateCgStatus(batchNo);
+        callRecordsMapper.updateAddressStatus(batchNo);
+        callRecordsMapper.updateClientName(batchNo);
         callRecordsMapper.updateTotalCall();
         callRecordsMapper.updateOnCallTimeAndCnt();
         callRecordsMapper.updateOnrate();

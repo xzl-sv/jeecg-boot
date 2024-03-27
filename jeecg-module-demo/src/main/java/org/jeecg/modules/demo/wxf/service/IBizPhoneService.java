@@ -5,9 +5,11 @@ import org.jeecg.modules.demo.wxf.entity.BizExportRecord;
 import org.jeecg.modules.demo.wxf.entity.BizImportTask;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @Description: 号码资源表
@@ -28,5 +30,10 @@ public interface IBizPhoneService extends IService<BizPhone> {
 
     Result<BizExportRecord> submitExportTask(Class clazz, String paramMapJson);
 
+    void delBatch(String batchNo);
+
     void doimportPhone2(BizImportTask importTask);
+
+    @Transactional(rollbackFor = Exception.class)
+    void delBatchs(List<String> ids);
 }

@@ -16,8 +16,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface BizTransferRecordMapper extends BaseMapper<BizTransferRecord> {
 
-    @Select("select r.id,rt.transfer_status from  biz_transfer_record r,biz_transfer_record_tmp rt " +
-            "where r.transfer_num=rt.transfer_num  and  r.transfer_status<>rt.transfer_status")
+    @Select("select r.id,rt.transfer_status,rt.price,rt.sign_time,rt.transfer_comp from  biz_transfer_record r,biz_transfer_record_tmp rt " +
+            "            where r.transfer_num=rt.transfer_num  and ( r.transfer_status<>rt.transfer_status or r.price<>rt.price or r.sign_time<>rt.sign_time  or r.transfer_comp<>rt.transfer_comp)")
     public List<BizTransferRecord> findTransferStatusToBeUpdate();
 
 

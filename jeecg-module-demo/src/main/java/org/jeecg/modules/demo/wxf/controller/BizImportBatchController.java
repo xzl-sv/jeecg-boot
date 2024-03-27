@@ -20,6 +20,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -50,6 +51,9 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 public class BizImportBatchController extends JeecgController<BizImportBatch, IBizImportBatchService> {
 	@Autowired
 	private IBizImportBatchService bizImportBatchService;
+
+	@Autowired
+	private IBizPhoneService bizPhoneService;
 	
 	/**
 	 * 分页列表查询
@@ -114,7 +118,7 @@ public class BizImportBatchController extends JeecgController<BizImportBatch, IB
 	@RequiresPermissions("wxf:biz_import_batch:delete")
 	@DeleteMapping(value = "/delete")
 	public Result<String> delete(@RequestParam(name="id",required=true) String id) {
-		bizImportBatchService.removeById(id);
+		this.bizPhoneService.delBatchs(Arrays.asList(id));
 		return Result.OK("删除成功!");
 	}
 	
@@ -129,7 +133,8 @@ public class BizImportBatchController extends JeecgController<BizImportBatch, IB
 	@RequiresPermissions("wxf:biz_import_batch:deleteBatch")
 	@DeleteMapping(value = "/deleteBatch")
 	public Result<String> deleteBatch(@RequestParam(name="ids",required=true) String ids) {
-		this.bizImportBatchService.removeByIds(Arrays.asList(ids.split(",")));
+//		this.bizImportBatchService.removeByIds(Arrays.asList(ids.split(",")));
+		bizPhoneService.delBatchs(Arrays.asList(ids.split(",")));
 		return Result.OK("批量删除成功!");
 	}
 	
