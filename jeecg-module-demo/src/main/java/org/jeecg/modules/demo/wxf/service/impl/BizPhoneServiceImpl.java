@@ -1,5 +1,7 @@
 package org.jeecg.modules.demo.wxf.service.impl;
 
+import cn.hutool.core.date.DateTime;
+import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,6 +16,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
@@ -124,10 +128,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         final String newFileName = csvFile.getParentFile().getAbsolutePath() + File.separator + csvFile.getName().split("\\.")[0] + ".XLSX";
         try {
             //创建SXSSFWorkbook对象，参数表示要保持在内存中的行数
-            SXSSFWorkbook workbook = new SXSSFWorkbook(2000);
+            XSSFWorkbook workbook = new XSSFWorkbook();
             CSVReader reader = new CSVReader(new FileReader(csvFile.getCanonicalPath()));
             Sheet sheet = workbook.createSheet("Sheet1");
-
+            XSSFCellStyle strCellStyle= workbook.createCellStyle();
+            //CellType.STRING，里面写着1就是String格式
+//            strCellStyle.setDataFormat(1);
+            strCellStyle.setBorderBottom(BorderStyle.HAIR);
             Row row;
             Cell cell;
             String[] dataRow;
@@ -135,19 +142,38 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 row = sheet.createRow(sheet.getPhysicalNumberOfRows());
                 for (int j = 0; j < dataRow.length; j++) {
                     cell = row.createCell(j);
-                    cell.setCellValue(dataRow[j]);
+                    DateUtil.parse("");
+                    cell.setCellValue(formatDate(dataRow[j]));
                     cell.setCellType(CellType.STRING);
+                    cell.setCellStyle(strCellStyle);
                 }
             }
             File xlsxFile = new File(newFileName);
             FileOutputStream fos = new FileOutputStream(xlsxFile);
             workbook.write(fos);
-            workbook.dispose();
+            workbook.close();
+//            workbook.dispose();
             fos.close();
 //            csvFile.delete();
             return xlsxFile;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static String formatDate(String mayDate){
+        try {
+            final DateTime parse = DateUtil.parse(mayDate);
+            if(parse==null){
+                return mayDate;
+            }
+            final int year = DateUtil.year(parse);
+            if(year >3000 || year<1500){
+                return mayDate;
+            }
+            return DateUtil.formatDateTime(parse);
+        } catch (Exception e) {
+            return mayDate;
         }
     }
 
