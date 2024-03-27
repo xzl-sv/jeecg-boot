@@ -6,11 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Charsets;
+import com.opencsv.CSVReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.base.ImportExcelFilter;
 import org.jeecg.modules.demo.wxf.dto.ImportSummary;
@@ -38,10 +41,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -107,9 +107,48 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         File file = new File(filePath);
 
         FileUtils.copyInputStreamToFile(multipartFile.getInputStream(), file);
-        log.info("文件成功缓存到：{}",file.getAbsolutePath());
+        final String absolutePath = file.getAbsolutePath();
+        log.info("文件成功缓存到：{}", absolutePath);
+        if(absolutePath.toLowerCase().endsWith("csv")){
+            final File newExcelFileFromCsv = convertCsvToExcel(file);
+            log.info("csv 文件转换成功：{}",newExcelFileFromCsv.getAbsolutePath());
+            return newExcelFileFromCsv;
+        }
+
 
         return file;
+    }
+
+
+    public static File convertCsvToExcel(File csvFile) {
+        final String newFileName = csvFile.getParentFile().getAbsolutePath() + File.separator + csvFile.getName().split("\\.")[0] + ".XLSX";
+        try {
+            //创建SXSSFWorkbook对象，参数表示要保持在内存中的行数
+            SXSSFWorkbook workbook = new SXSSFWorkbook(2000);
+            CSVReader reader = new CSVReader(new FileReader(csvFile.getCanonicalPath()));
+            Sheet sheet = workbook.createSheet("Sheet1");
+
+            Row row;
+            Cell cell;
+            String[] dataRow;
+            while ((dataRow = reader.readNext()) != null) {
+                row = sheet.createRow(sheet.getPhysicalNumberOfRows());
+                for (int j = 0; j < dataRow.length; j++) {
+                    cell = row.createCell(j);
+                    cell.setCellValue(dataRow[j]);
+                    cell.setCellType(CellType.STRING);
+                }
+            }
+            File xlsxFile = new File(newFileName);
+            FileOutputStream fos = new FileOutputStream(xlsxFile);
+            workbook.write(fos);
+            workbook.dispose();
+            fos.close();
+//            csvFile.delete();
+            return xlsxFile;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

@@ -9,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
@@ -71,7 +73,21 @@ public class BizCallRecordsController extends JeecgController<BizCallRecords, IB
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
-		QueryWrapper<BizCallRecords> queryWrapper = QueryGenerator.initQueryWrapper(bizCallRecords, req.getParameterMap());
+		final Map<String, String[]> param = req.getParameterMap();
+		QueryWrapper<BizCallRecords> queryWrapper = QueryGenerator.initQueryWrapper(bizCallRecords, param);
+		//男1 女2  非女99
+		if(param.get("gender99")!=null && StringUtils.isNotBlank(((String[]) param.get("gender99"))[0])) {
+			final String gender = ((String[]) param.get("gender99"))[0];
+			if(gender.equalsIgnoreCase("99")){
+				//非女
+				queryWrapper.and(w->w.ne("gender","2").or().isNull("gender"));//2024-03-24 22:49:30改成前台传参
+			}else{
+				//男或者女
+				queryWrapper.eq("gender",gender);
+			}
+
+		}
+
 		Page<BizCallRecords> page = new Page<BizCallRecords>(pageNo, pageSize);
 		IPage<BizCallRecords> pageList = bizCallRecordsService.page(page, queryWrapper);
 		return Result.OK(pageList);

@@ -144,6 +144,8 @@ public class CommonController {
             }else{
                 fileName = orgName+ "_" + System.currentTimeMillis();
             }
+//            String savePath = "/Users/qianshihua/Downloads/gaode" + File.separator + fileName;
+
             String savePath = file.getPath() + File.separator + fileName;
             File savefile = new File(savePath);
             FileCopyUtils.copy(mf.getBytes(), savefile);

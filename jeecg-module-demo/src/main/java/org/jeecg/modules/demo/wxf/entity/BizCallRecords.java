@@ -92,8 +92,8 @@ public class BizCallRecords implements Serializable {
     @ApiModelProperty(value = "客户姓名")
     private java.lang.String clientName;
 	/**客户地址*/
-	@Excel(name = "客户地址", width = 15)
-    @ApiModelProperty(value = "客户地址")
+	@Excel(name = "地址", width = 15)
+    @ApiModelProperty(value = "地址")
     private java.lang.String clientAddress;
 	/**备注*/
 	@Excel(name = "备注", width = 15)

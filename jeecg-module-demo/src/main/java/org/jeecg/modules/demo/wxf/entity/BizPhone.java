@@ -124,4 +124,7 @@ public class BizPhone implements Serializable {
 	@Excel(name = "接通率", width = 15)
     @ApiModelProperty(value = "接通率")
     private java.lang.Double onRate;
+
+
+
 }
