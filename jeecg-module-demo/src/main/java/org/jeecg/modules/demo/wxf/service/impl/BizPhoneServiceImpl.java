@@ -2,12 +2,14 @@ package org.jeecg.modules.demo.wxf.service.impl;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.StopWatch;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.opencsv.CSVReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -49,6 +51,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.jeecg.modules.demo.wxf.util.Consts.DEFAULT_EXPORT_SIZE;
@@ -701,10 +704,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
      * @param importTask
      */
     private void doexportPhone(BizImportTask importTask) {
+        StopWatch sw = new StopWatch();
+        sw.start("准备工作");
         String taskStatus = TASK_STATUS_NORMAL;
         final int pageSize = 10000;
 
 
+        List<BizPhone> totalData = new ArrayList<>();
         final Map<String, String[]> param = JSON.parseObject(importTask.getTaskSummary(), new TypeReference<Map<String, String[]>>() {
         });
 
@@ -767,67 +773,83 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         final String filePath = generateFileName(pojoClass);
 
 
-
+        sw.stop();
+        sw.start("取数");
         for (int i = 0; i < queryTimes; i++) {
             if(i!=0){
                 pageParam.setCurrent(pageNos.get(i));
                 pageData = this.page(pageParam, queryWrapper);
             }
             //处理每次查出来的数据
+            if(i==queryTimes-1 && lastPageSize>0){
+                //最后一页
+                totalData.addAll(pageData.getRecords().subList(0,lastPageSize));
 
-            try {
-                out = new FileOutputStream(new File(filePath));
-                final int listSize = (int)pageData.getTotal();
-                //更新最近提取时间
-                final List<BizPhone> records = pageData.getRecords();
-                final List<BizPhone> toBeUpdateExportTime = records.stream().map(p -> {
-                    BizPhone tb = new BizPhone();tb.setId(p.getId());tb.setLastExportTime(new Date());
-                    return tb;
-                }).collect(Collectors.toList());
-                ArrayList<ExcelExportEntity> excelParams =  new ArrayList<>();
-                workbook=exportDataToExcel(workbook,out, records,excelParams);
+            }else{
 
-
-
-                //导出成功后更新最近导出时间，仅仅更新最近导出时间
-                this.updateBatchById(toBeUpdateExportTime);
-                importTask.setFilePath(filePath);
-                QueryWrapper<BizExportRecord> p = new QueryWrapper<>();
-                p.eq("batch_no",importTask.getBatchNo());
-                BizExportRecord one = exportRecordService.getOne(p, false);
-                if(one==null){
-                    one = new BizExportRecord();
-                }
-                one.setSize(listSize);
-                one.setFileAddress(filePath);
-                one.setExportTime(new Date());
-                one.setBatchNo(importTask.getBatchNo());
-                exportRecordService.saveOrUpdate(one);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                taskStatus = TASK_STATUS_ERROR;
-            }finally {
-                try {
-                    if(workbook!=null){
-                        workbook.close();
-                        if (workbook instanceof SXSSFWorkbook) {
-                            SXSSFWorkbook w = (SXSSFWorkbook) workbook;
-                            w.dispose();
-                        }
-                    }
-                    if(out!=null){
-                        out.flush();
-                        out.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                importTask.setTaskStatus(taskStatus);
+                totalData.addAll(pageData.getRecords());
             }
 
+        }
+        sw.stop();
+
+        try {
+            out = new FileOutputStream(new File(filePath));
+            final int listSize = totalData.size();
+            //更新最近提取时间
+            final List<BizPhone> toBeUpdateExportTime = totalData.stream().map(p -> {
+                BizPhone tb = new BizPhone();tb.setId(p.getId());tb.setLastExportTime(new Date());
+                return tb;
+            }).collect(Collectors.toList());
+            final List<String> idsToBeUpdate = totalData.stream().map(p -> p.getId()).collect(Collectors.toList());
+            sw.start("写excel");
+            workbook=exportDataToExcel(workbook,out, totalData);
+            sw.stop();
+
+            sw.start("更新导出时间");
+
+            //导出成功后更新最近导出时间，仅仅更新最近导出时间
+//            this.saveOrUpdateBatch(toBeUpdateExportTime,5000);
+            final List<List<String>> partition = Lists.partition(idsToBeUpdate, 10000);
+            partition.forEach(p->this.baseMapper.updateExportTimeBatch(p));
 
 
+            sw.stop();
+//            this.updateBatchById(toBeUpdateExportTime);
+            importTask.setFilePath(filePath);
+            QueryWrapper<BizExportRecord> p = new QueryWrapper<>();
+            p.eq("batch_no",importTask.getBatchNo());
+            BizExportRecord one = exportRecordService.getOne(p, false);
+            if(one==null){
+                one = new BizExportRecord();
+            }
+            one.setSize(listSize);
+            one.setFileAddress(filePath);
+            one.setExportTime(new Date());
+            one.setBatchNo(importTask.getBatchNo());
+            exportRecordService.saveOrUpdate(one);
+
+            log.info(sw.prettyPrint(TimeUnit.SECONDS));
+        } catch (Exception e) {
+            e.printStackTrace();
+            taskStatus = TASK_STATUS_ERROR;
+        }finally {
+            try {
+                if(workbook!=null){
+                    workbook.close();
+                    if (workbook instanceof SXSSFWorkbook) {
+                        SXSSFWorkbook w = (SXSSFWorkbook) workbook;
+                        w.dispose();
+                    }
+                }
+                if(out!=null){
+                    out.flush();
+                    out.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            importTask.setTaskStatus(taskStatus);
         }
 
 
@@ -870,7 +892,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     private String generateFileName(Class<?> pojoClass) {
         String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl(pojoClass, "download/excelDownload"));
         SimpleDateFormat format = new SimpleDateFormat("yyyMMddHHmmss");
-        final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +".xls";
+        final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +".xlsx";
         autoCreateDirAndFile(new File(filePath));
         return filePath;
     }
@@ -996,7 +1018,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
      * @param dataList
      * @throws Exception
      */
-    public Workbook exportDataToExcel(Workbook workbook,FileOutputStream out,List dataList,ArrayList<ExcelExportEntity> excelParams ) throws Exception {
+    public Workbook exportDataToExcel(Workbook workbook,FileOutputStream out,List dataList) throws Exception {
         ExportParams exportParams=new ExportParams(null, null , "sheet1");
         exportParams.setType(ExcelType.XSSF);
         if(dataList==null || dataList.size()==0){
@@ -1005,7 +1027,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         final Class<?> pojoClass = dataList.get(0).getClass();
 
         try {
-            workbook = ExcelExportUtil.exportExcel(workbook,exportParams, pojoClass, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"}, excelParams);
+            workbook = ExcelExportUtil.exportExcel(exportParams, pojoClass, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"});
             workbook.write(out);
             out.flush();
 

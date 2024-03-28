@@ -59,7 +59,7 @@ public class JeecgEntityExcelWxfView  extends MiniAbstractExcelView {
         if(StringUtils.isBlank(record.getFileAddress())){
             return ;
         }
-        workbook =  new HSSFWorkbook(new FileInputStream(new File(record.getFileAddress())));
+        workbook =  new XSSFWorkbook(new FileInputStream(new File(record.getFileAddress())));
 
         if (model.containsKey("fileName")) {
             codedFileName = (String)model.get("fileName");
