@@ -69,6 +69,24 @@ public class BizImportTask implements Serializable {
     @ApiModelProperty(value = "批次号")
     private java.lang.String batchNo;
 
+
+    @Excel(name = "备注", width = 15)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String msg;
+
+
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty(value = "startTime")
+    private java.util.Date startTime;
+
+
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty(value = "endTime")
+    private java.util.Date endTime;
+
+
     public BizImportTask() {
     }
 
@@ -77,6 +95,16 @@ public class BizImportTask implements Serializable {
         this.taskStatus = taskStatus;
         this.taskType = taskType;
         this.batchNo = batchNo;
+    }
+
+    public BizImportTask start(){
+        this.startTime=new Date();
+        return this;
+    }
+
+    public BizImportTask end(){
+        this.endTime=new Date();
+        return this;
     }
 
 }

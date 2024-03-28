@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jeecg.common.api.vo.Result;
@@ -29,6 +30,8 @@ import org.jeecgframework.poi.excel.ExcelExportUtil;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
+import org.jeecgframework.poi.excel.entity.enmus.ExcelType;
+import org.jeecgframework.poi.excel.entity.params.ExcelExportEntity;
 import org.jeecgframework.poi.excel.entity.result.ExcelImportResult;
 import org.jeecgframework.poi.util.PoiPublicUtil;
 import org.jetbrains.annotations.NotNull;
@@ -328,6 +331,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             return null;
         }
         final BizImportTask importTask = list.get(0);
+        importTask.start();
         log.info("待执行任务数量：{}，即将执行任务类型：{}，批次号：{} 的任务。",list.size(),importTask.getTaskType(),importTask.getBatchNo());
         if(GlobalTaskStatus.run(importTask)==false){
             log.info("很不幸，任务枪战失败，等待下次机会。");
@@ -353,7 +357,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         } catch (Throwable e) {
             e.printStackTrace();
             importTask.setTaskStatus(TASK_STATUS_ERROR);
-            importTask.setTaskSummary(e.getMessage()+"-->"+importTask.getTaskSummary());
+            importTask.setMsg(e.getMessage()+"-->"+importTask.getTaskSummary());
+        }finally {
+            importTask.end();
         }
         return importTask;
 
@@ -696,74 +702,177 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
      */
     private void doexportPhone(BizImportTask importTask) {
         String taskStatus = TASK_STATUS_NORMAL;
+        final int pageSize = 10000;
+
 
         final Map<String, String[]> param = JSON.parseObject(importTask.getTaskSummary(), new TypeReference<Map<String, String[]>>() {
         });
 
         QueryWrapper<BizPhone> queryWrapper = buildQwWhenExport(param);
+
+        Page<BizPhone> pageParam = new Page<BizPhone>(1, pageSize);
+        Page<BizPhone> pageData = this.page(pageParam, queryWrapper);
+        final long pages = pageData.getPages();
+
+
 //        tqsl 缺失：提取数量
         //默认提取数量10000
-        int tqsl = DEFAULT_EXPORT_SIZE;
-        if(param.get("tqsl")!=null && StringUtils.isNotBlank(((String[])param.get("tqsl"))[0])) {
-            tqsl = Integer.parseInt(((String[])param.get("tqsl"))[0]);
-        }
-        List<BizPhone> list = null;
+        //计算球提取数量
+        int tqsl = calTqsl(param, (int) pageParam.getTotal());
 
         
 
         //提取顺序是否按照入库时间，否：随机，是：根据入库时间
         boolean isOrderByInserTime = false;
         if(param.get("tqsx")!=null && StringUtils.equalsIgnoreCase("rksj",((String[])param.get("tqsx"))[0])){
-            queryWrapper.orderByDesc("create_time");
+            queryWrapper.orderByDesc("create_time desc");
             isOrderByInserTime = true;
         }
 
-        if(isOrderByInserTime){
-            //非随机，只需要取符合条件的数量即可
-            Page<BizPhone> page = new Page<BizPhone>(1, tqsl);
-            list = this.page(page, queryWrapper).getRecords();
+
+
+        Workbook workbook = null;
+        FileOutputStream out = null;
+
+        // 最后一页需要取多少数据，大于0才有效
+        final int lastPageSize = tqsl % pageSize;
+        //数据库查询次数
+        final int queryTimes = tqsl / pageSize + (lastPageSize == 0 ? 0 : 1);
+        List<Integer> pageNos = new ArrayList<>();
+        if(isOrderByInserTime==true){
+            //根据时间取前面几个
+            for (int i = 1; i <= queryTimes; i++) {
+                pageNos.add(i);
+            }
         }else{
-            list = list(queryWrapper);
-            if(list.size()>tqsl){
-                //数量超过要取的数量，需要随机操作
-                Collections.shuffle(list);
-                list = list.subList(0, tqsl);
+            List<Integer> allPageNo = new ArrayList<>();
+            //随机
+            for (int i = 1; i <=(int)pages ; i++) {
+                allPageNo.add(i);
             }
-        }
-        try {
-            final int listSize = list.size();
-            List<BizPhone> toBeUpdateExportTime = new ArrayList<>(list.size());
-            for (BizPhone p:list){
-                BizPhone tb = new BizPhone();
-                tb.setId(p.getId());
-                tb.setLastExportTime(new Date());
-                toBeUpdateExportTime.add(tb);
-            }
-            final String filePath = exportDataToExcel(list);
-            //导出成功后更新最近导出时间，仅仅更新最近导出时间
-
-            this.updateBatchById(toBeUpdateExportTime);
-            importTask.setFilePath(filePath);
-            QueryWrapper<BizExportRecord> p = new QueryWrapper<>();
-            p.eq("batch_no",importTask.getBatchNo());
-            BizExportRecord one = exportRecordService.getOne(p, false);
-            if(one==null){
-                one = new BizExportRecord();
-            }
-            one.setSize(listSize);
-            one.setFileAddress(filePath);
-            one.setExportTime(new Date());
-            one.setBatchNo(importTask.getBatchNo());
-            exportRecordService.saveOrUpdate(one);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            taskStatus = TASK_STATUS_ERROR;
-        }finally {
-            importTask.setTaskStatus(taskStatus);
+            Collections.shuffle(allPageNo);
+            pageNos = allPageNo.subList(0, queryTimes);
         }
 
 
+
+        ExportParams exportParams=new ExportParams(null, null , "sheet1");
+        exportParams.setType(ExcelType.XSSF);
+        if( pageData.getTotal()==0L){
+            return ;
+        }
+        final Class<?> pojoClass = pageData.getRecords().get(0).getClass();
+
+        //获取文件名
+        final String filePath = generateFileName(pojoClass);
+
+
+
+        for (int i = 0; i < queryTimes; i++) {
+            if(i!=0){
+                pageParam.setCurrent(pageNos.get(i));
+                pageData = this.page(pageParam, queryWrapper);
+            }
+            //处理每次查出来的数据
+
+            try {
+                out = new FileOutputStream(new File(filePath));
+                final int listSize = (int)pageData.getTotal();
+                //更新最近提取时间
+                final List<BizPhone> records = pageData.getRecords();
+                final List<BizPhone> toBeUpdateExportTime = records.stream().map(p -> {
+                    BizPhone tb = new BizPhone();tb.setId(p.getId());tb.setLastExportTime(new Date());
+                    return tb;
+                }).collect(Collectors.toList());
+                ArrayList<ExcelExportEntity> excelParams =  new ArrayList<>();
+                workbook=exportDataToExcel(workbook,out, records,excelParams);
+
+
+
+                //导出成功后更新最近导出时间，仅仅更新最近导出时间
+                this.updateBatchById(toBeUpdateExportTime);
+                importTask.setFilePath(filePath);
+                QueryWrapper<BizExportRecord> p = new QueryWrapper<>();
+                p.eq("batch_no",importTask.getBatchNo());
+                BizExportRecord one = exportRecordService.getOne(p, false);
+                if(one==null){
+                    one = new BizExportRecord();
+                }
+                one.setSize(listSize);
+                one.setFileAddress(filePath);
+                one.setExportTime(new Date());
+                one.setBatchNo(importTask.getBatchNo());
+                exportRecordService.saveOrUpdate(one);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                taskStatus = TASK_STATUS_ERROR;
+            }finally {
+                try {
+                    if(workbook!=null){
+                        workbook.close();
+                        if (workbook instanceof SXSSFWorkbook) {
+                            SXSSFWorkbook w = (SXSSFWorkbook) workbook;
+                            w.dispose();
+                        }
+                    }
+                    if(out!=null){
+                        out.flush();
+                        out.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                importTask.setTaskStatus(taskStatus);
+            }
+
+
+
+        }
+
+
+
+//
+//        if(isOrderByInserTime){
+//            //非随机，只需要取符合条件的数量即可
+//            Page<BizPhone> page = new Page<BizPhone>(1, tqsl);
+//            list = this.page(page, queryWrapper).getRecords();
+//        }else{
+//            //随机取数
+//            list = list(queryWrapper);
+//            if(list.size()>tqsl){
+//                //数量超过要取的数量，需要随机操作
+//                Collections.shuffle(list);
+//                list = list.subList(0, tqsl);
+//            }
+//        }
+
+
+
+        //上面是列表数量，下面是excel操作
+
+
+    }
+
+    private static int calTqsl(Map<String, String[]> param, int dbTotal) {
+        int tqsl = DEFAULT_EXPORT_SIZE;
+        if(param.get("tqsl")!=null && StringUtils.isNotBlank(((String[]) param.get("tqsl"))[0])) {
+            tqsl = Integer.parseInt(((String[]) param.get("tqsl"))[0]);
+        }
+        if(tqsl> dbTotal){
+            //要取的数量大于总量，取全部
+            tqsl = dbTotal;
+        }
+        return tqsl;
+    }
+
+    @NotNull
+    private String generateFileName(Class<?> pojoClass) {
+        String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl(pojoClass, "download/excelDownload"));
+        SimpleDateFormat format = new SimpleDateFormat("yyyMMddHHmmss");
+        final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +".xls";
+        autoCreateDirAndFile(new File(filePath));
+        return filePath;
     }
 
     /**
@@ -887,45 +996,23 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
      * @param dataList
      * @throws Exception
      */
-    public String exportDataToExcel(List dataList) throws Exception {
-        Workbook workbook = null;
-        FileOutputStream out = null;
-        File file = null;
+    public Workbook exportDataToExcel(Workbook workbook,FileOutputStream out,List dataList,ArrayList<ExcelExportEntity> excelParams ) throws Exception {
+        ExportParams exportParams=new ExportParams(null, null , "sheet1");
+        exportParams.setType(ExcelType.XSSF);
+        if(dataList==null || dataList.size()==0){
+            return workbook;
+        }
+        final Class<?> pojoClass = dataList.get(0).getClass();
+
         try {
-            ExportParams exportParams=new ExportParams(null, null , "sheet1");
-            if(dataList==null || dataList.size()==0){
-                return "";
-            }
-            final Class<?> pojoClass = dataList.get(0).getClass();
-            workbook = ExcelExportUtil.exportExcel(exportParams, pojoClass, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"});
-
-
-            //获取文件名
-            String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl( pojoClass, "download/excelDownload"));
-            SimpleDateFormat format = new SimpleDateFormat("yyyMMddHHmmss");
-            final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +".xls";
-
-            file = new File(filePath);
-            autoCreateDirAndFile(file);
-
-            out = new FileOutputStream(file);
+            workbook = ExcelExportUtil.exportExcel(workbook,exportParams, pojoClass, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"}, excelParams);
             workbook.write(out);
             out.flush();
+
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
-            try {
-                if(workbook!=null){
-                    workbook.close();
-                }
-                if(out!=null){
-                    out.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
-        return file.getAbsolutePath();
+        return workbook;
     }
 
 
