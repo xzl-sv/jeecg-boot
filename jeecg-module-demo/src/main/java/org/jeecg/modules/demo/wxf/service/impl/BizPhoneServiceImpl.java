@@ -229,6 +229,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         importTaskService.save(importTask);
         BizExportRecord ber = new BizExportRecord();
         ber.setBatchNo(batchno);
+        ber.setExportRule(paramMapJson);
         exportRecordService.save(ber);
         return Result.ok("任务提交成功，稍后将自动执行导出操作！");
     }
@@ -330,7 +331,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 .eq(BizImportTask::getTaskStatus, "1").orderByAsc(BizImportTask::getCreateTime);
         final List<BizImportTask> list = importTaskService.list(query);
         if(list.size()==0){
-            log.info("不存在待执行的任务。");
+//            log.info("不存在待执行的任务。");
             return null;
         }
         final BizImportTask importTask = list.get(0);
@@ -385,7 +386,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
     @Transactional(rollbackFor = Exception.class)
     public void doimportPhone(BizImportTask importTask) {
-
+            StopWatch sw = new StopWatch();
             // 2正常结束。99异常
             String taskStatus = TASK_STATUS_NORMAL;
             final String batchno = importTask.getBatchNo();
@@ -400,25 +401,35 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             try {
 
                 if(file.exists()){
+                    sw.start("解析文件");
+
                     List<BizMidImport> list = parseDataFromFile(file, params);
                     final int excelTotalSize = list.size();
                     list.forEach(a->a.setBatchNo(batchno));
                     final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
                     //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
                     importExcelFilter.doFilter(list);
+                    sw.stop();
 
                     long start = System.currentTimeMillis();
+                    sw.start("保存中间表");
+
                     midImportService.truncateTable();
                     midImportService.saveBatch(list);
+
+                    sw.stop();
                     //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
                     //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
                     log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                     //update-end-author:taoyan date:20190528 for:批量插入数据
                     //TODO 处理数据
-
+                    sw.start("计算重复、数据");
                     final Integer existInDb = midImportService.phoneExistInDb();
                     final Integer valueNum = midImportService.phoneValueNum();
+                    sw.stop();;
+                    sw.start("插入号码表");
                     midImportService.insertPhoneFromMidImport();
+                    sw.stop();
                     importSummary.setTotal(excelTotalSize);
                     //非法的数据=excel数据 - 识别出来的号码总数
                     importSummary.setInvalidNotDup(excelTotalSize-list.size());
@@ -446,6 +457,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 //                midImportService.truncateTable();
                 importTask.setTaskStatus(taskStatus);
                 importTask.setTaskSummary(JSON.toJSONString(importSummary));
+                importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
                 try {
 //                    inputstream.close();
                 } catch (Exception e) {
@@ -493,6 +505,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     @Transactional(rollbackFor = Exception.class)
     public void doimportCallRecord(BizImportTask importTask) {
 
+        StopWatch sw = new StopWatch();
         final String batchno = importTask.getBatchNo();
         ImportSummary importSummary = new ImportSummary();
         importSummary.setBeginTime(new Date());
@@ -509,22 +522,28 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
             // 2正常结束。99异常
             if(file.exists()){
+                sw.start("解析文件");
                 inputstream = new FileInputStream(file);
                 final ExcelImportResult<BizCallRecords> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizCallRecords.class, params);
 //                final Workbook workbook = objectExcelImportResult.getWorkbook();
                 //原始的excel数据
                 List<BizCallRecords> list = objectExcelImportResult.getList();
+                sw.stop();
                 list.forEach(a->a.setBatchNo(batchno));
 //                final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
                 //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
 
                 long start = System.currentTimeMillis();
+                sw.start("插入数据");
                 callRecordsService.saveBatch(list);
+                sw.stop();
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //1，更新客户类型：成功客户、失败客户
                 //2，更新客户姓名（非空）
                 //3.更新地址，2024-03-27 20:17:10 新增
+                sw.start("更新号码表");
                 callRecordsService.updatePhoneByCallRecords(batchno);
+                sw.stop();
                 importSummary.setTotal(list.size());
                 //非法的数据=excel数据 - 识别出来的号码总数
             }else{
@@ -542,6 +561,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         } finally {
             importTask.setTaskStatus(taskStatus);
             importTask.setTaskSummary(JSON.toJSONString(importSummary));
+            importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
             try {
                 inputstream.close();
             } catch (Exception e) {
@@ -558,7 +578,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     @Transactional(rollbackFor = Exception.class)
 
     public void doimportTransferRecord(BizImportTask importTask) {
-
+        StopWatch sw = new StopWatch();
         final String batchno = importTask.getBatchNo();
         ImportSummary importSummary = new ImportSummary();
         importSummary.setBeginTime(new Date());
@@ -575,20 +595,26 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             // 2正常结束。99异常
             String taskStatus = TASK_STATUS_NORMAL;
             if(file.exists()){
+                sw.start("解析文件");
                 inputstream = new FileInputStream(file);
                 final ExcelImportResult<BizTransferRecordTmp> objectExcelImportResult = ExcelImportUtil.importExcelVerify(inputstream, BizTransferRecordTmp.class, params);
                 final Workbook workbook = objectExcelImportResult.getWorkbook();
                 //原始的excel数据
                 List<BizTransferRecordTmp> list = objectExcelImportResult.getList();
+                sw.stop();
                 list.forEach(a->a.setBatchNo(batchno));
 
                 long start = System.currentTimeMillis();
+                sw.start("保存中间表");
                 //先清空数据，避免之前的bug遗留数据
                 transferRecordTmpService.truncate();
                 transferRecordTmpService.saveBatch(list);
+                sw.stop();
                 log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
                 //1，更新客户地址：
+                sw.start("更新号码表");
                 transferRecordTmpService.insertFromTmpUpdatePhoneTableUpdateTransferStatus();
+                sw.stop();
 
 
                 importSummary.setTotal(list.size());
@@ -608,6 +634,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         } finally {
             transferRecordTmpService.truncate();
             importTask.setTaskSummary(JSON.toJSONString(importSummary));
+            importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
             try {
                 if(inputstream!=null)
                     inputstream.close();
@@ -850,6 +877,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 e.printStackTrace();
             }
             importTask.setTaskStatus(taskStatus);
+            importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
         }
 
 

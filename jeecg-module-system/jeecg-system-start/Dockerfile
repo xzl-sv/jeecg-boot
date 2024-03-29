@@ -3,6 +3,7 @@ FROM anapsix/alpine-java:8_server-jre_unlimited
 MAINTAINER qianshiva
 
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN apk --no-cache add curl
 
 #RUN mkdir -p /jeecg-boot/config/jeecg/
 
