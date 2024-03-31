@@ -15,10 +15,13 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface BizPhoneMapper extends BaseMapper<BizPhone> {
 
-    @Update("update biz_phone  set del_flag='1' where batch_no =  #{batchNo,jdbcType=VARCHAR}")
+//    @Update("update biz_phone  set del_flag='1' where batch_no =  #{batchNo,jdbcType=VARCHAR}")
+//    void delBatch(@Param("batchNo")String batchNo);
+
+
+
+    @Update("delete from biz_phone  where batch_no =  #{batchNo,jdbcType=VARCHAR}")
     void delBatch(@Param("batchNo")String batchNo);
-
-
 
     void updateExportTimeBatch(@Param("ids")List<String> ids);
 }
