@@ -55,8 +55,8 @@ public class BizPhone implements Serializable {
     @ApiModelProperty(value = "所属部门")
     private java.lang.String sysOrgCode;
 	/**客户名称*/
-	@Excel(name = "客户名称", width = 15)
-    @ApiModelProperty(value = "客户名称")
+	@Excel(name = "客户姓名", width = 15)
+    @ApiModelProperty(value = "客户姓名")
     private java.lang.String clientName;
 	/**地址*/
 	@Excel(name = "地址", width = 15)

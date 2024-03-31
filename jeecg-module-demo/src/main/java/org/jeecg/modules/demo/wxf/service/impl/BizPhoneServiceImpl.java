@@ -229,7 +229,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         importTaskService.save(importTask);
         BizExportRecord ber = new BizExportRecord();
         ber.setBatchNo(batchno);
-        ber.setExportRule(paramMapJson);
+        ber.parseParam(paramMapJson);
         exportRecordService.save(ber);
         return Result.ok("任务提交成功，稍后将自动执行导出操作！");
     }

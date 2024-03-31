@@ -35,8 +35,8 @@ public class BizMidImport implements Serializable {
     @ApiModelProperty(value = "id")
     private java.lang.String id;
 	/**客户名称*/
-	@Excel(name = "客户名称", width = 15)
-    @ApiModelProperty(value = "客户名称")
+	@Excel(name = "客户姓名", width = 15)
+    @ApiModelProperty(value = "客户姓名")
     private java.lang.String clientName;
 	/**地址*/
 	@Excel(name = "地址", width = 15)

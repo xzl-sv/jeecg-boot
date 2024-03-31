@@ -31,7 +31,7 @@ public interface BizMidImportMapper extends BaseMapper<BizMidImport> {
     public Integer phoneValueNum();
 
     @Insert("insert into biz_phone (id,province_code,city_code,batch_no,phone,create_time,create_by,client_name,client_status,address,gender) " +
-            "select  min(m.id),min(m.province_code),min(m.city_code),min(m.batch_no),  m.phone,now(),'admin', min(m.client_name), min(m.client_status), min(m.address), min(m.gender)from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
+            "select  max(m.id),max(m.province_code),max(m.city_code),max(m.batch_no),  m.phone,now(),'admin', max(m.client_name), max(m.client_status), max(m.address), max(m.gender)from biz_mid_import m left join biz_phone p on p.phone=m.phone\n" +
             "where p.phone is null group by  m.phone limit #{batchNo,jdbcType=INTEGER}")
     void insertPhoneFromMidImport(@Param("batchNo")Integer batchNo);
 
