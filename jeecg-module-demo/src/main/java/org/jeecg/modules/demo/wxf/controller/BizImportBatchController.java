@@ -48,7 +48,7 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 @RestController
 @RequestMapping("/wxf/bizImportBatch")
 @Slf4j
-public class BizImportBatchController extends JeecgController<BizImportBatch, IBizImportBatchService> {
+public class  BizImportBatchController extends JeecgController<BizImportBatch, IBizImportBatchService> {
 	@Autowired
 	private IBizImportBatchService bizImportBatchService;
 
