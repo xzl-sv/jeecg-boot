@@ -21,6 +21,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 
+import org.jeecg.modules.demo.wxf.service.IBizMidImportService;
 import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
@@ -56,6 +57,9 @@ public class BizBalckPhoneController extends JeecgController<BizBalckPhone, IBiz
 
 	 @Autowired
 	private IBizBalckPhoneService bizBalckPhoneService;
+
+	 @Autowired
+	 private IBizMidImportService midImportService;
 	
 	/**
 	 * 分页列表查询
@@ -91,6 +95,7 @@ public class BizBalckPhoneController extends JeecgController<BizBalckPhone, IBiz
 	@PostMapping(value = "/add")
 	public Result<String> add(@RequestBody BizBalckPhone bizBalckPhone) {
 		bizBalckPhoneService.save(bizBalckPhone);
+		midImportService.updatePhoneBlackStatus();
 		return Result.OK("添加成功！");
 	}
 	

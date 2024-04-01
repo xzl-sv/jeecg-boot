@@ -69,5 +69,11 @@ public class BizMidImportServiceImpl extends ServiceImpl<BizMidImportMapper, Biz
         this.baseMapper.updateBlackStatus();
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updatePhoneBlackStatus(){
+        this.baseMapper.updateBlackStatus();
+    }
+
 
 }

@@ -33,4 +33,7 @@ public interface IBizMidImportService extends IService<BizMidImport> {
 
     @Transactional(rollbackFor = Exception.class)
     void insertBlackPhoneFromMidImport();
+
+    @Transactional(rollbackFor = Exception.class)
+    void updatePhoneBlackStatus();
 }
