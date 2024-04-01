@@ -84,8 +84,7 @@ public class BizTransferRecord implements Serializable {
     @ApiModelProperty(value = "实收金额")
     private java.lang.String price;
 	/**物流公司*/
-	@Excel(name = "物流公司", width = 15,dicCode = "wuliu")
-    @Dict(dicCode = "wuliu")
+	@Excel(name = "物流公司", width = 15)
     @ApiModelProperty(value = "物流公司")
     private java.lang.String transferComp;
 	/**收件人地址*/
@@ -101,4 +100,10 @@ public class BizTransferRecord implements Serializable {
     @Excel(name = "姓名", width = 15)
     @ApiModelProperty(value = "姓名")
     private java.lang.String clientName;
+
+
+    /**备注*/
+    @Excel(name = "备注", width = 200)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String bz;
 }

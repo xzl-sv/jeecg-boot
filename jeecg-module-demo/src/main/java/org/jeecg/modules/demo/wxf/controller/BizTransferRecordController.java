@@ -1,5 +1,6 @@
 package org.jeecg.modules.demo.wxf.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +11,10 @@ import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.jeecg.common.api.vo.Result;
+import org.jeecg.common.aspect.annotation.Dict;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
+import org.jeecg.modules.demo.wxf.dto.WxfDict;
 import org.jeecg.modules.demo.wxf.entity.BizMidImport;
 import org.jeecg.modules.demo.wxf.entity.BizTransferRecord;
 import org.jeecg.modules.demo.wxf.service.IBizPhoneService;
@@ -57,6 +60,13 @@ public class BizTransferRecordController extends JeecgController<BizTransferReco
 
 	 @Autowired
 	private IBizTransferRecordService bizTransferRecordService;
+
+
+	 @ApiOperation(value="运单记录-分页列表查询", notes="运单记录-分页列表查询")
+	 @GetMapping(value = "/wxfListTransferStatus")
+	 public Result<List<WxfDict>>  wxfListTransferStatus(@RequestParam(name = "dictType") String dictType){
+		return  Result.OK(bizTransferRecordService.queryDict(dictType));
+	 }
 	
 	/**
 	 * 分页列表查询

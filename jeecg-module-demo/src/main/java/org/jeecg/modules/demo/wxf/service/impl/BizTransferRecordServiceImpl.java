@@ -1,5 +1,6 @@
 package org.jeecg.modules.demo.wxf.service.impl;
 
+import org.jeecg.modules.demo.wxf.dto.WxfDict;
 import org.jeecg.modules.demo.wxf.entity.BizTransferRecord;
 import org.jeecg.modules.demo.wxf.mapper.BizTransferRecordMapper;
 import org.jeecg.modules.demo.wxf.service.IBizTransferRecordService;
@@ -21,12 +22,27 @@ public class BizTransferRecordServiceImpl extends ServiceImpl<BizTransferRecordM
 
     @Override
     public void updateTransferStatusToBeUpdate(){
-        final List<BizTransferRecord> transferStatusToBeUpdate = this.baseMapper.findTransferStatusToBeUpdate();
-        if(CollectionUtils.isEmpty(transferStatusToBeUpdate)){
-            return;
-        }
-        for (BizTransferRecord b:transferStatusToBeUpdate){
-            baseMapper.updateById(b);
+        baseMapper.updateTransferFromTransferTmp();
+
+//        final List<BizTransferRecord> transferStatusToBeUpdate = this.baseMapper.findTransferStatusToBeUpdate();
+//        if(CollectionUtils.isEmpty(transferStatusToBeUpdate)){
+//            return;
+//        }
+//        for (BizTransferRecord b:transferStatusToBeUpdate){
+//            baseMapper.updateById(b);
+//        }
+    }
+
+    @Override
+    public List<WxfDict> queryDict(String dictType){
+        if("transferStatus".equalsIgnoreCase(dictType)){
+            return baseMapper.transferStatus();
+        }else if("transferComp".equalsIgnoreCase(dictType)){
+            return baseMapper.transferComp();
+        }else if("price".equalsIgnoreCase(dictType)){
+            return baseMapper.price();
+        }else{
+            return baseMapper.transferStatus();
         }
     }
 

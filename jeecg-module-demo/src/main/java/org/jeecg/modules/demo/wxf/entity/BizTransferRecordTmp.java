@@ -101,4 +101,11 @@ public class BizTransferRecordTmp implements Serializable {
     @Excel(name = "姓名", width = 15)
     @ApiModelProperty(value = "姓名")
     private java.lang.String clientName;
+
+
+
+    /**备注*/
+    @Excel(name = "备注", width = 200)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String bz;
 }
