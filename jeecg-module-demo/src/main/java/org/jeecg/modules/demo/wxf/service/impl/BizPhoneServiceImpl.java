@@ -33,7 +33,6 @@ import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.entity.ExportParams;
 import org.jeecgframework.poi.excel.entity.ImportParams;
 import org.jeecgframework.poi.excel.entity.enmus.ExcelType;
-import org.jeecgframework.poi.excel.entity.params.ExcelExportEntity;
 import org.jeecgframework.poi.excel.entity.result.ExcelImportResult;
 import org.jeecgframework.poi.util.PoiPublicUtil;
 import org.jetbrains.annotations.NotNull;
@@ -328,7 +327,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }
 
         LambdaQueryWrapper<BizImportTask> query = new LambdaQueryWrapper<BizImportTask>()
-                .eq(BizImportTask::getTaskStatus, "1").orderByAsc(BizImportTask::getCreateTime);
+                .eq(BizImportTask::getTaskStatus, "1").orderByDesc(BizImportTask::getCreateTime);
         final List<BizImportTask> list = importTaskService.list(query);
         if(list.size()==0){
 //            log.info("不存在待执行的任务。");
@@ -743,6 +742,15 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
         QueryWrapper<BizPhone> queryWrapper = buildQwWhenExport(param);
 
+        //提取顺序是否按照入库时间，否：随机，是：根据入库时间
+        boolean isOrderByInserTime = false;
+        if(param.get("tqsx")!=null && StringUtils.equalsIgnoreCase("rksj",((String[])param.get("tqsx"))[0])){
+            queryWrapper.orderByDesc(" create_time ");
+            isOrderByInserTime = true;
+        }
+
+
+
         Page<BizPhone> pageParam = new Page<BizPhone>(1, pageSize);
         Page<BizPhone> pageData = this.page(pageParam, queryWrapper);
         final long pages = pageData.getPages();
@@ -755,12 +763,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
         
 
-        //提取顺序是否按照入库时间，否：随机，是：根据入库时间
-        boolean isOrderByInserTime = false;
-        if(param.get("tqsx")!=null && StringUtils.equalsIgnoreCase("rksj",((String[])param.get("tqsx"))[0])){
-            queryWrapper.orderByDesc("create_time desc");
-            isOrderByInserTime = true;
-        }
 
 
 
@@ -784,6 +786,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 allPageNo.add(i);
             }
             Collections.shuffle(allPageNo);
+            Collections.shuffle(pageData.getRecords());
             pageNos = allPageNo.subList(0, queryTimes);
         }
 
@@ -791,13 +794,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
         ExportParams exportParams=new ExportParams(null, null , "sheet1");
         exportParams.setType(ExcelType.XSSF);
-        if( pageData.getTotal()==0L){
-            return ;
-        }
-        final Class<?> pojoClass = pageData.getRecords().get(0).getClass();
+//        if( pageData.getTotal()==0L){
+//            return ;
+//        }
+//        final Class<?> pojoClass = pageData.getRecords().get(0).getClass();
 
         //获取文件名
-        final String filePath = generateFileName(pojoClass);
+        final String filePath = generateFileName(BizPhone.class);
 
 
         sw.stop();
@@ -824,12 +827,12 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             out = new FileOutputStream(new File(filePath));
             final int listSize = totalData.size();
             //更新最近提取时间
-            final List<BizPhone> toBeUpdateExportTime = totalData.stream().map(p -> {
-                BizPhone tb = new BizPhone();tb.setId(p.getId());tb.setLastExportTime(new Date());
-                return tb;
-            }).collect(Collectors.toList());
             final List<String> idsToBeUpdate = totalData.stream().map(p -> p.getId()).collect(Collectors.toList());
             sw.start("写excel");
+            totalData.forEach(p->{if(StringUtils.isBlank(p.getPrice())){
+                p.setPrice("39");
+            }
+            });
             workbook=exportDataToExcel(workbook,out, totalData);
             sw.stop();
 
@@ -974,7 +977,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }
 
         //        batchNo 提取指定批次（输入批次号）
-        if(param.get("batchNo")!=null && StringUtils.isNotBlank(((String[]) param.get("batchNo"))[0]))queryWrapper.eq("batch_no", param.get("batchNo").toString());
+        if(param.get("batchNo")!=null && StringUtils.isNotBlank(((String[]) param.get("batchNo"))[0]))queryWrapper.eq("batch_no", param.get("batchNo")[0]);
 //        createTime 入库时间：（选择年月日区间，默认历史到今天，可以修改）
 //        if(param.get("createTime")!=null && StringUtils.isNotBlank(param.get("batchNo").toString()))queryWrapper.eq("batchNo",param.get("batchNo").toString());
         //        tqsx 取料顺序：（选择随机or入库时间（先近后远））
@@ -1049,13 +1052,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     public Workbook exportDataToExcel(Workbook workbook,FileOutputStream out,List dataList) throws Exception {
         ExportParams exportParams=new ExportParams(null, null , "sheet1");
         exportParams.setType(ExcelType.XSSF);
-        if(dataList==null || dataList.size()==0){
-            return workbook;
-        }
-        final Class<?> pojoClass = dataList.get(0).getClass();
 
         try {
-            workbook = ExcelExportUtil.exportExcel(exportParams, pojoClass, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"});
+            workbook = ExcelExportUtil.exportExcel(exportParams, BizPhone.class, dataList, new String[]{"clientName","phone","address","price","zjbz","gender"});
             workbook.write(out);
             out.flush();
 
@@ -1078,4 +1077,9 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
     }
 
+
+    @Override
+    public void updateBatch(String oldBatchNo, String newBatchNo){
+        this.baseMapper.updateBatch(oldBatchNo,newBatchNo);
+    }
 }

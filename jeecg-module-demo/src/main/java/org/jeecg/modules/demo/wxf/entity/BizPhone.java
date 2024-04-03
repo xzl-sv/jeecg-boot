@@ -58,7 +58,13 @@ public class BizPhone implements Serializable {
 	@Excel(name = "客户姓名", width = 15)
     @ApiModelProperty(value = "客户姓名")
     private java.lang.String clientName;
-	/**地址*/
+
+    /**客户号码*/
+    @Excel(name = "客户号码", width = 15)
+    @ApiModelProperty(value = "客户号码")
+    private java.lang.String phone;
+
+    /**地址*/
 	@Excel(name = "地址", width = 15)
     @ApiModelProperty(value = "地址")
     private java.lang.String address;
@@ -76,11 +82,7 @@ public class BizPhone implements Serializable {
 	@Excel(name = "批次号", width = 15)
     @ApiModelProperty(value = "批次号")
     private java.lang.String batchNo;
-	/**性别*/
-	@Excel(name = "性别", width = 15, dicCode = "sex")
-	@Dict(dicCode = "sex")
-    @ApiModelProperty(value = "性别")
-    private java.lang.String gender;
+
 	/**是否黑名单,1是0否*/
 	@Excel(name = "是否黑名单", width = 15, dicCode = "yn")
 	@Dict(dicCode = "yn")
@@ -97,11 +99,6 @@ public class BizPhone implements Serializable {
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "最近提取时间")
     private java.util.Date lastExportTime;
-	/**客户号码*/
-	@Excel(name = "客户号码", width = 15)
-    @ApiModelProperty(value = "客户号码")
-    private java.lang.String phone;
-
 
 	/**接通次数*/
 	@Excel(name = "接通次数", width = 15)
@@ -135,7 +132,11 @@ public class BizPhone implements Serializable {
     @ApiModelProperty(value = "质检备注")
     @TableField(exist = false)
     private String zjbz;
-
+    /**性别*/
+    @Excel(name = "性别", width = 15, dicCode = "sex")
+    @Dict(dicCode = "sex")
+    @ApiModelProperty(value = "性别")
+    private java.lang.String gender;
 
 
 }

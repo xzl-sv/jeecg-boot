@@ -24,4 +24,10 @@ public interface BizPhoneMapper extends BaseMapper<BizPhone> {
     void delBatch(@Param("batchNo")String batchNo);
 
     void updateExportTimeBatch(@Param("ids")List<String> ids);
+
+
+    @Update("update biz_phone set batch_no= #{newBatch,jdbcType=VARCHAR} where batch_no=#{oldBatch,jdbcType=VARCHAR}")
+    void updateBatch(String oldBatch,String newBatch);
+
+
 }

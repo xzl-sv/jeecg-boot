@@ -14,4 +14,5 @@ import java.util.List;
  */
 public interface IBizImportBatchService extends IService<BizImportBatch> {
 
+    void updateBatch(BizImportBatch bizImportBatch);
 }

@@ -36,6 +36,65 @@ public class BizCallRecords implements Serializable {
 	@TableId(type = IdType.ASSIGN_ID)
     @ApiModelProperty(value = "主键")
     private java.lang.String id;
+
+
+
+    /**开始时间*/
+    @Excel(name = "开始时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty(value = "开始时间")
+    private java.util.Date callTime;
+
+    /**通话时长*/
+    @Excel(name = "通话时长", width = 15)
+    @ApiModelProperty(value = "通话时长")
+    private java.lang.Integer callDuration;
+
+    /**性别*/
+    @Excel(name = "性别", width = 15, dicCode = "sex")
+    @Dict(dicCode = "sex")
+    @ApiModelProperty(value = "性别")
+    private java.lang.String gender;
+    /**坐席工号*/
+    @Excel(name = "坐席工号", width = 15)
+    @ApiModelProperty(value = "坐席工号")
+    private java.lang.String seatsNum;
+    /**坐席姓名*/
+    @Excel(name = "坐席姓名", width = 15)
+    @ApiModelProperty(value = "坐席姓名")
+    private java.lang.String seatsName;
+    /**客户姓名*/
+    @Excel(name = "客户姓名", width = 15)
+    @ApiModelProperty(value = "客户姓名")
+    private java.lang.String clientName;
+    /**客户地址*/
+    @Excel(name = "地址", width = 15)
+    @ApiModelProperty(value = "地址")
+    private java.lang.String clientAddress;
+    /**备注*/
+    @Excel(name = "备注", width = 15)
+    @ApiModelProperty(value = "备注")
+    private java.lang.String price;
+    /**批次号*/
+    @Excel(name = "批次号", width = 15)
+    @ApiModelProperty(value = "批次号")
+    private java.lang.String batchNo;
+    /**客户状态*/
+    @Excel(name = "客户状态", width = 15, dicCode = "client_status")
+    @Dict(dicCode = "client_status")
+    @ApiModelProperty(value = "客户状态")
+    private java.lang.String clientStatus;
+    /**客户号码*/
+    @Excel(name = "客户号码", width = 15)
+    @ApiModelProperty(value = "客户号码")
+    private java.lang.String phone;
+
+
+
+
+
+
 	/**创建人*/
     @ApiModelProperty(value = "创建人")
     private java.lang.String createBy;
@@ -55,16 +114,7 @@ public class BizCallRecords implements Serializable {
 	/**所属部门*/
     @ApiModelProperty(value = "所属部门")
     private java.lang.String sysOrgCode;
-	/**开始时间*/
-	@Excel(name = "开始时间", width = 20, format = "yyyy-MM-dd HH:mm:ss")
-	@JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
-    @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    @ApiModelProperty(value = "开始时间")
-    private java.util.Date callTime;
-	/**通话时长*/
-	@Excel(name = "通话时长", width = 15)
-    @ApiModelProperty(value = "通话时长")
-    private java.lang.Integer callDuration;
+
 	/**录音地址*/
 	@Excel(name = "录音地址", width = 15)
     @ApiModelProperty(value = "录音地址")
@@ -74,46 +124,10 @@ public class BizCallRecords implements Serializable {
 	@Dict(dicCode = "yn")
     @ApiModelProperty(value = "是否拉黑")
     private java.lang.String blackFlag;
-	/**性别*/
-	@Excel(name = "性别", width = 15, dicCode = "sex")
-	@Dict(dicCode = "sex")
-    @ApiModelProperty(value = "性别")
-    private java.lang.String gender;
-	/**坐席工号*/
-	@Excel(name = "坐席工号", width = 15)
-    @ApiModelProperty(value = "坐席工号")
-    private java.lang.String seatsNum;
-	/**坐席姓名*/
-	@Excel(name = "坐席姓名", width = 15)
-    @ApiModelProperty(value = "坐席姓名")
-    private java.lang.String seatsName;
-	/**客户姓名*/
-	@Excel(name = "客户姓名", width = 15)
-    @ApiModelProperty(value = "客户姓名")
-    private java.lang.String clientName;
-	/**客户地址*/
-	@Excel(name = "地址", width = 15)
-    @ApiModelProperty(value = "地址")
-    private java.lang.String clientAddress;
-	/**备注*/
-	@Excel(name = "备注", width = 15)
-    @ApiModelProperty(value = "备注")
-    private java.lang.String price;
+
 	/**任务名称*/
 	@Excel(name = "任务名称", width = 15)
     @ApiModelProperty(value = "任务名称")
     private java.lang.String jobName;
-	/**批次号*/
-	@Excel(name = "批次号", width = 15)
-    @ApiModelProperty(value = "批次号")
-    private java.lang.String batchNo;
-	/**客户状态*/
-	@Excel(name = "客户状态", width = 15, dicCode = "client_status")
-	@Dict(dicCode = "client_status")
-    @ApiModelProperty(value = "客户状态")
-    private java.lang.String clientStatus;
-	/**客户号码*/
-	@Excel(name = "客户号码", width = 15)
-    @ApiModelProperty(value = "客户号码")
-    private java.lang.String phone;
+
 }

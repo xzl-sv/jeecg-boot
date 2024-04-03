@@ -36,4 +36,6 @@ public interface IBizPhoneService extends IService<BizPhone> {
 
     @Transactional(rollbackFor = Exception.class)
     void delBatchs(List<String> ids);
+
+    void updateBatch(String oldBatchNo, String newBatchNo);
 }

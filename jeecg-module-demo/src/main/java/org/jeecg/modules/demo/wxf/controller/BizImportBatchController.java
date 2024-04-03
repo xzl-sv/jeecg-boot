@@ -103,7 +103,7 @@ public class  BizImportBatchController extends JeecgController<BizImportBatch, I
 	@RequiresPermissions("wxf:biz_import_batch:edit")
 	@RequestMapping(value = "/edit", method = {RequestMethod.PUT,RequestMethod.POST})
 	public Result<String> edit(@RequestBody BizImportBatch bizImportBatch) {
-		bizImportBatchService.updateById(bizImportBatch);
+		bizImportBatchService.updateBatch(bizImportBatch);
 		return Result.OK("编辑成功!");
 	}
 	
