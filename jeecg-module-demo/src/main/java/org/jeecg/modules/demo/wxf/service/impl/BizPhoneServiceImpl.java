@@ -754,6 +754,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         Page<BizPhone> pageParam = new Page<BizPhone>(1, pageSize);
         Page<BizPhone> pageData = this.page(pageParam, queryWrapper);
         final long pages = pageData.getPages();
+        final long total = pageData.getTotal();
 
 
 //        tqsl 缺失：提取数量
@@ -808,6 +809,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         for (int i = 0; i < queryTimes; i++) {
             if(i!=0){
                 pageParam.setCurrent(pageNos.get(i));
+                pageParam.setSearchCount(false);
+                pageParam.setTotal(total);
                 pageData = this.page(pageParam, queryWrapper);
             }
             //处理每次查出来的数据

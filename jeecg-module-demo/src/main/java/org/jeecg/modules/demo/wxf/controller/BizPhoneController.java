@@ -134,6 +134,8 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 			queryWrapper.eq("province_code",provinceCode.substring(0,provinceCode.length()-2)+"01");
 		}
 		Page<BizPhone> page = new Page<BizPhone>(pageNo, pageSize);
+//		page.setSearchCount(false);
+//		page.setTotal(11110000);
 		IPage<BizPhone> pageList = bizPhoneService.page(page, queryWrapper);
 		return Result.OK(pageList);
 	}
