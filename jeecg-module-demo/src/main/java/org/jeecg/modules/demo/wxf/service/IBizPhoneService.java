@@ -1,5 +1,6 @@
 package org.jeecg.modules.demo.wxf.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.modules.demo.wxf.entity.BizExportRecord;
 import org.jeecg.modules.demo.wxf.entity.BizImportTask;
@@ -38,4 +39,6 @@ public interface IBizPhoneService extends IService<BizPhone> {
     void delBatchs(List<String> ids);
 
     void updateBatch(String oldBatchNo, String newBatchNo);
+
+    void  buildPage(Page page);
 }

@@ -28,6 +28,8 @@ import org.jeecg.modules.demo.wxf.service.*;
 import org.jeecg.modules.demo.wxf.util.BatchNoUtil;
 import org.jeecg.modules.demo.wxf.util.GlobalTaskStatus;
 import org.jeecg.modules.demo.wxf.util.PhoneUtil;
+import org.jeecg.modules.system.entity.SysDict;
+import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecgframework.poi.excel.ExcelExportUtil;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.entity.ExportParams;
@@ -76,6 +78,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     private static final String TASK_STATUS_ERROR = "99";
 
 
+    @Autowired
+    private ISysDictService sysDictSsysDictServiceervice;
     @Autowired
     private IBizUtilPhoneService utilPhoneService;
     @Autowired
@@ -817,7 +821,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             if(i==queryTimes-1 && lastPageSize>0){
                 //最后一页
                 totalData.addAll(pageData.getRecords().subList(0,lastPageSize));
-
             }else{
 
                 totalData.addAll(pageData.getRecords());
@@ -1084,5 +1087,25 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
     @Override
     public void updateBatch(String oldBatchNo, String newBatchNo){
         this.baseMapper.updateBatch(oldBatchNo,newBatchNo);
+    }
+
+
+    @Override
+    public void  buildPage(Page page){
+        try {
+            QueryWrapper<SysDict> qw = new QueryWrapper();
+            qw.eq("dict_name","系统配置");
+            final SysDict sd = sysDictSsysDictServiceervice.getOne(qw,false);
+            if(sd==null || "是".equalsIgnoreCase(sd.getDescription())){
+                //开启分页
+            }else{
+                //关闭分页
+                final Integer total = this.baseMapper.cacheCount();
+                page.setSearchCount(false);
+                page.setTotal(total);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -83,6 +83,7 @@ public class BizExportRecordController extends JeecgController<BizExportRecord, 
 		});
 		QueryWrapper<BizExportRecord> queryWrapper = QueryGenerator.initQueryWrapper(bizExportRecord, req.getParameterMap());
 		Page<BizExportRecord> page = new Page<BizExportRecord>(pageNo, pageSize);
+		bizPhoneService.buildPage(page);
 		IPage<BizExportRecord> pageList = bizExportRecordService.page(page, queryWrapper);
 
 

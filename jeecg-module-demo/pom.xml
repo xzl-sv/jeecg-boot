@@ -21,6 +21,10 @@
             <artifactId>opencsv</artifactId>
             <version>5.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.jeecgframework.boot</groupId>
+            <artifactId>jeecg-system-biz</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

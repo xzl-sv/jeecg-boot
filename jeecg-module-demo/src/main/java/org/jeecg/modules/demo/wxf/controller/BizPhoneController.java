@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jeecg.modules.demo.wxf.service.impl.BizPhoneServiceImpl;
 import org.jeecg.modules.demo.wxf.util.BatchNoUtil;
 import org.jeecg.modules.demo.wxf.util.PhoneUtil;
+import org.jeecg.modules.system.service.ISysDictService;
 import org.jeecgframework.poi.excel.ExcelExportUtil;
 import org.jeecgframework.poi.excel.ExcelImportUtil;
 import org.jeecgframework.poi.excel.def.NormalExcelConstants;
@@ -79,6 +80,8 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 
 	 @Resource
 	 private JeecgBaseConfig jeecgBaseConfig;
+
+
 
 
 	@ApiOperation(value="号码资源表-分页列表查询", notes="号码资源表-分页列表查询")
@@ -134,6 +137,8 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 			queryWrapper.eq("province_code",provinceCode.substring(0,provinceCode.length()-2)+"01");
 		}
 		Page<BizPhone> page = new Page<BizPhone>(pageNo, pageSize);
+		bizPhoneService.buildPage(page);
+
 //		page.setSearchCount(false);
 //		page.setTotal(11110000);
 		IPage<BizPhone> pageList = bizPhoneService.page(page, queryWrapper);

@@ -37,6 +37,7 @@ public class BizImportBatchServiceImpl extends ServiceImpl<BizImportBatchMapper,
             //新的批次原来已经存在。删除掉这个，更新号码表中老的批次号为新的批次号
             this.removeById(bizImportBatch.getId());
         }else{
+            bizImportBatch.setOrgNum(bizImportBatch.getOrgNum()+oldOne.getOrgNum());
             updateById(bizImportBatch);
         }
         phoneService.updateBatch(oldBatchNo,newBatchNo);

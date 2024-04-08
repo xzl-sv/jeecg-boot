@@ -3,6 +3,7 @@ package org.jeecg.modules.demo.wxf.mapper;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.jeecg.modules.demo.wxf.entity.BizPhone;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -29,5 +30,8 @@ public interface BizPhoneMapper extends BaseMapper<BizPhone> {
     @Update("update biz_phone set batch_no= #{newBatch,jdbcType=VARCHAR} where batch_no=#{oldBatch,jdbcType=VARCHAR}")
     void updateBatch(String oldBatch,String newBatch);
 
+
+    @Select("select zb_value from biz_summary where zb_type='统计值' and zb_name='号码总量' ")
+    Integer cacheCount();
 
 }
