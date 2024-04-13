@@ -811,12 +811,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         sw.stop();
         sw.start("取数");
         for (int i = 0; i < queryTimes; i++) {
-            if(i!=0){
+//            if(i!=0){
+            //2024-04-13 22:58:24 第一次循环的时候不进行查询，把前面查询的第一页作为最终数据。但是会导致偶尔出现第一页被查询了2次的问题
                 pageParam.setCurrent(pageNos.get(i));
                 pageParam.setSearchCount(false);
                 pageParam.setTotal(total);
                 pageData = this.page(pageParam, queryWrapper);
-            }
+//            }
             //处理每次查出来的数据
             if(i==queryTimes-1 && lastPageSize>0){
                 //最后一页
