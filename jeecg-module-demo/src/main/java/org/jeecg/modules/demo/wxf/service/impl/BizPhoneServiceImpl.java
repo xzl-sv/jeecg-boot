@@ -787,7 +787,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }else{
             List<Integer> allPageNo = new ArrayList<>();
             //随机
-            for (int i = 1; i <=(int)pages ; i++) {
+            int pagesToRandom = (int) pages;
+
+            if(queryTimes>pages){
+                //要查询的次数大于页码总数，去掉最后一页（解决取到最后一页数量不足的bug）
+                pagesToRandom = pagesToRandom -1;
+            }
+            for (int i = 1; i <= pagesToRandom; i++) {
                 allPageNo.add(i);
             }
             Collections.shuffle(allPageNo);
