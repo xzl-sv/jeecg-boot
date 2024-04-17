@@ -1,7 +1,11 @@
-FROM anapsix/alpine-java:8_server-jre_unlimited
+#FROM anapsix/alpine-java:8_server-jre_unlimited
+FROM anapsix/alpine-java:8_jdk_unlimited
+#FROM openjdk:8-jre-alpine
+
 
 MAINTAINER qianshiva
 
+RUN #apk add jattach
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN apk --no-cache add curl
 
