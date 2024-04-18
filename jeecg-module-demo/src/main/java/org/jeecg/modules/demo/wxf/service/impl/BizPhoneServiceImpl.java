@@ -711,8 +711,6 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         }
     }
 
-
-
     private void autoCreateDirAndFile(File f){
         if(f.getParentFile().exists()==false){
             f.getParentFile().mkdirs();
@@ -758,6 +756,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         Page<BizPhone> pageParam = new Page<BizPhone>(1, pageSize);
         Page<BizPhone> pageData = this.page(pageParam, queryWrapper);
         final long pages = pageData.getPages();
+        //记录最后一页的数量
+        int lastPageNo = (int)pages;
         final long total = pageData.getTotal();
 
 
@@ -799,6 +799,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             Collections.shuffle(allPageNo);
             Collections.shuffle(pageData.getRecords());
             pageNos = allPageNo.subList(0, queryTimes);
+            Collections.sort(pageNos);
         }
 
 
