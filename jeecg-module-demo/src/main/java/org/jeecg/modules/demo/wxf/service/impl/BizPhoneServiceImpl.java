@@ -44,6 +44,7 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -203,25 +204,30 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
         Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
-        for (Map.Entry<String, MultipartFile> entity : fileMap.entrySet()) {
-            //一个文件一个批次
-            final String batchno = BatchNoUtil.generate();
+        final MultiValueMap<String, MultipartFile> multiFileMap = multipartRequest.getMultiFileMap();
+
+        //一个文件一个批次
+        final String batchno = BatchNoUtil.generate();
+        String dir ="";
+        String files="";
+        for (Map.Entry<String, List<MultipartFile>> entity : multiFileMap.entrySet()) {
 
             // 获取上传文件对象
-            MultipartFile file = entity.getValue();
-            File newFile = null;
-            try {
-                newFile = multiPartFileToFile(file,clazz);
-            } catch (IOException e) {
-                e.printStackTrace();
+            List<MultipartFile> file = entity.getValue();
+            for (MultipartFile mf:file){
+                File newFile = null;
+                try {
+                    newFile = multiPartFileToFile(mf,clazz);
+                    dir=newFile.getParentFile().getAbsolutePath();
+                    files +=newFile.getName()+"@@@";
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            final String filePath = newFile != null ? newFile.getAbsolutePath() : "";
-
-            BizImportTask importTask = new BizImportTask(filePath,"1",translateTaskType(clazz),batchno);
-            importTaskService.save(importTask);
-            return Result.ok("文件上传成功，稍后将自动执行导入操作！");
         }
-        return Result.error("文件上传失败！");
+        BizImportTask importTask = new BizImportTask(dir+"####"+files,"1",translateTaskType(clazz),batchno);
+        importTaskService.save(importTask);
+        return Result.ok("文件上传成功，稍后将自动执行导入操作！");
     }
 
     @Override
@@ -389,84 +395,72 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
     @Transactional(rollbackFor = Exception.class)
     public void doimportPhone(BizImportTask importTask) {
-            StopWatch sw = new StopWatch();
-            // 2正常结束。99异常
-            String taskStatus = TASK_STATUS_NORMAL;
-            final String batchno = importTask.getBatchNo();
-            ImportSummary importSummary = new ImportSummary();
+        StopWatch sw = new StopWatch();
+        // 2正常结束。99异常
+        String taskStatus = TASK_STATUS_NORMAL;
+        final String batchno = importTask.getBatchNo();
+        ImportSummary importSummary = new ImportSummary();
+         int excelTotalSize = 0;
 
-            // 获取上传文件对象
-            File file = new File((importTask.getFilePath()));
-            ImportParams params = new ImportParams();
-            params.setTitleRows(0);
-            params.setHeadRows(1);
-            params.setNeedSave(false);
-            try {
+        final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
+        midImportService.truncateTable();
 
-                if(file.exists()){
-                    sw.start("解析文件");
+        List<BizMidImport> totalDataFromFiles = new ArrayList<>();
 
-                    List<BizMidImport> list = parseDataFromFile(file, params);
-                    final int excelTotalSize = list.size();
-                    list.forEach(a->a.setBatchNo(batchno));
-                    final ImportExcelFilter<BizMidImport> importExcelFilter = buildFilter();
-                    //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
-                    importExcelFilter.doFilter(list);
-                    sw.stop();
+        final List<String> multiFiles = importTask.getMultiFilePath();
+        ImportParams params = new ImportParams();
+        params.setTitleRows(0);
+        params.setHeadRows(1);
+        params.setNeedSave(false);
 
-                    long start = System.currentTimeMillis();
-                    sw.start("保存中间表");
+        try{
+            sw.start("解析文件");
 
-                    midImportService.truncateTable();
-                    midImportService.saveBatch(list);
-
-                    sw.stop();
-                    //400条 saveBatch消耗时间1592毫秒  循环插入消耗时间1947毫秒
-                    //1200条  saveBatch消耗时间3687毫秒 循环插入消耗时间5212毫秒
-                    log.info("消耗时间" + (System.currentTimeMillis() - start) + "毫秒");
-                    //update-end-author:taoyan date:20190528 for:批量插入数据
-                    //TODO 处理数据
-                    sw.start("计算重复、数据");
-                    final Integer existInDb = midImportService.phoneExistInDb();
-                    final Integer valueNum = midImportService.phoneValueNum();
-                    sw.stop();;
-                    sw.start("插入号码表");
-                    midImportService.insertPhoneFromMidImport();
-                    sw.stop();
-                    importSummary.setTotal(excelTotalSize);
-                    //非法的数据=excel数据 - 识别出来的号码总数
-                    importSummary.setInvalidNotDup(excelTotalSize-list.size());
-                    importSummary.setValid(valueNum);
-                    importSummary.setDup(existInDb);
-                    batchService.save(importSummary.toBatch(batchno));
-                }else{
-                    taskStatus = TASK_STATUS_ERROR;
-                }
-                importSummary.setEndTime(new Date());
-
-//                Thread.sleep(15000L);
-//                if(true){
-//                    throw new RuntimeException("我是手工抛出的异常，验证是否会吧任务更新成失败。");
-//                }
-
-
-            } catch (Exception e) {
-                //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
-                String msg = e.getMessage();
-                log.error(msg, e);
-                taskStatus = TASK_STATUS_ERROR;
-                importSummary.setMsg(e.getMessage());
-            } finally {
-//                midImportService.truncateTable();
-                importTask.setTaskStatus(taskStatus);
-                importTask.setTaskSummary(JSON.toJSONString(importSummary));
-                importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
-                try {
-//                    inputstream.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            for (String mf:multiFiles){
+                File file = new File(mf);
+                List<BizMidImport> list = parseDataFromFile(file, params);
+                excelTotalSize+=list.size();
+                list.forEach(a->a.setBatchNo(batchno));
+                //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
+                importExcelFilter.doFilter(list);
+                totalDataFromFiles.addAll(list);
             }
+            sw.stop();
+
+
+            sw.start("保存中间表");
+            midImportService.saveBatch(totalDataFromFiles);
+            sw.stop();
+
+            //TODO 处理数据
+            sw.start("计算重复、数据");
+            final Integer existInDb = midImportService.phoneExistInDb();
+            final Integer valueNum = midImportService.phoneValueNum();
+            sw.stop();;
+            sw.start("插入号码表");
+            midImportService.insertPhoneFromMidImport();
+            sw.stop();
+            importSummary.setTotal(excelTotalSize);
+            //非法的数据=excel数据 - 识别出来的号码总数
+            importSummary.setInvalidNotDup(excelTotalSize-totalDataFromFiles.size());
+            importSummary.setValid(valueNum);
+            importSummary.setDup(existInDb);
+            batchService.save(importSummary.toBatch(batchno));
+        }catch (Exception e) {
+            //update-begin-author:taoyan date:20211124 for: 导入数据重复增加提示
+            String msg = e.getMessage();
+            log.error(msg, e);
+            taskStatus = TASK_STATUS_ERROR;
+            importSummary.setMsg(e.getMessage());
+        } finally {
+            importTask.setTaskStatus(taskStatus);
+            importTask.setTaskSummary(JSON.toJSONString(importSummary));
+            importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
+            try {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static List<BizMidImport> parseDataFromFile(File file, ImportParams params) throws Exception {
@@ -514,7 +508,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         importSummary.setBeginTime(new Date());
 
         // 获取上传文件对象
-        File file = new File((importTask.getFilePath()));
+        File file = new File((importTask.getSingleFilePath()));
         FileInputStream inputstream = null;
         ImportParams params = new ImportParams();
         params.setTitleRows(0);
@@ -575,11 +569,10 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
 
     /**
-     * 执行导入通话记录
+     * 执行导入运单
      * @param importTask
      */
     @Transactional(rollbackFor = Exception.class)
-
     public void doimportTransferRecord(BizImportTask importTask) {
         StopWatch sw = new StopWatch();
         final String batchno = importTask.getBatchNo();
@@ -587,7 +580,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         importSummary.setBeginTime(new Date());
 
         // 获取上传文件对象
-        File file = new File((importTask.getFilePath()));
+        File file = new File((importTask.getSingleFilePath()));
         FileInputStream inputstream = null;
         ImportParams params = new ImportParams();
         params.setTitleRows(0);
@@ -656,7 +649,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         ImportSummary importSummary = new ImportSummary();
 
         // 获取上传文件对象
-        File file = new File((importTask.getFilePath()));
+        File file = new File((importTask.getSingleFilePath()));
         FileInputStream inputstream = null;
         ImportParams params = new ImportParams();
         params.setTitleRows(0);

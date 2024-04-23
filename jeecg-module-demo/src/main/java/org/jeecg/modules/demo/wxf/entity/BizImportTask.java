@@ -1,9 +1,13 @@
 package org.jeecg.modules.demo.wxf.entity;
 
+import java.io.File;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.math.BigDecimal;
+import java.util.List;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -75,6 +79,7 @@ public class BizImportTask implements Serializable {
     private java.lang.String msg;
 
 
+
     @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty(value = "startTime")
@@ -105,6 +110,35 @@ public class BizImportTask implements Serializable {
     public BizImportTask end(){
         this.endTime=new Date();
         return this;
+    }
+
+
+    public String getSingleFilePath(){
+        if(filePath==null){
+            return "";
+        }
+        return filePath.replaceAll("####","").replaceAll("@@@","");
+    }
+
+    public List<String> getMultiFilePath(){
+        List<String> paths = new ArrayList<>();
+        if(filePath==null){
+            return paths;
+        }
+        final String[] split = filePath.split("####");
+        if(split.length!=2){
+            return paths;
+        }
+        final String dir = split[0];
+        final String[] files = split[1].split("@@@");
+        for (int i = 0; i < files.length; i++) {
+
+            final String file = files[i];
+            if(file!=null && file.length()>0){
+                paths.add(dir+ File.separator+ file);
+            }
+        }
+        return paths;
     }
 
 }
