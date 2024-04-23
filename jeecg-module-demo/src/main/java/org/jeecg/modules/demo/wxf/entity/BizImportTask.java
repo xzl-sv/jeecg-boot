@@ -2,20 +2,15 @@ package org.jeecg.modules.demo.wxf.entity;
 
 import java.io.File;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.math.BigDecimal;
 import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.jeecgframework.poi.excel.annotation.Excel;
 import org.jeecg.common.aspect.annotation.Dict;
@@ -113,14 +108,14 @@ public class BizImportTask implements Serializable {
     }
 
 
-    public String getSingleFilePath(){
+    public String singleFilePath(){
         if(filePath==null){
             return "";
         }
         return filePath.replaceAll("####","").replaceAll("@@@","");
     }
 
-    public List<String> getMultiFilePath(){
+    public List<String> multiFilePath(){
         List<String> paths = new ArrayList<>();
         if(filePath==null){
             return paths;

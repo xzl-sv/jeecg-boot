@@ -407,7 +407,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
         List<BizMidImport> totalDataFromFiles = new ArrayList<>();
 
-        final List<String> multiFiles = importTask.getMultiFilePath();
+        final List<String> multiFiles = importTask.multiFilePath();
         ImportParams params = new ImportParams();
         params.setTitleRows(0);
         params.setHeadRows(1);
@@ -508,7 +508,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         importSummary.setBeginTime(new Date());
 
         // 获取上传文件对象
-        File file = new File((importTask.getSingleFilePath()));
+        File file = new File((importTask.singleFilePath()));
         FileInputStream inputstream = null;
         ImportParams params = new ImportParams();
         params.setTitleRows(0);
@@ -580,7 +580,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         importSummary.setBeginTime(new Date());
 
         // 获取上传文件对象
-        File file = new File((importTask.getSingleFilePath()));
+        File file = new File((importTask.singleFilePath()));
         FileInputStream inputstream = null;
         ImportParams params = new ImportParams();
         params.setTitleRows(0);
@@ -649,7 +649,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         ImportSummary importSummary = new ImportSummary();
 
         // 获取上传文件对象
-        File file = new File((importTask.getSingleFilePath()));
+        File file = new File((importTask.singleFilePath()));
         FileInputStream inputstream = null;
         ImportParams params = new ImportParams();
         params.setTitleRows(0);
