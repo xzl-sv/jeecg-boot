@@ -423,14 +423,13 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
                 list.forEach(a->a.setBatchNo(batchno));
                 //过滤后的excel。有效的手机号码。有效的手机号码还得和库里的号码比对
                 importExcelFilter.doFilter(list);
-                totalDataFromFiles.addAll(list);
+                midImportService.saveBatch(list);
+
+//                totalDataFromFiles.addAll(list);
             }
             sw.stop();
 
 
-            sw.start("保存中间表");
-            midImportService.saveBatch(totalDataFromFiles);
-            sw.stop();
 
             //TODO 处理数据
             sw.start("计算重复、数据");
@@ -442,7 +441,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             sw.stop();
             importSummary.setTotal(excelTotalSize);
             //非法的数据=excel数据 - 识别出来的号码总数
-            importSummary.setInvalidNotDup(excelTotalSize-totalDataFromFiles.size());
+//            importSummary.setInvalidNotDup(excelTotalSize-totalDataFromFiles.size());
             importSummary.setValid(valueNum);
             importSummary.setDup(existInDb);
             batchService.save(importSummary.toBatch(batchno));
