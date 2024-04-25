@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.formula.functions.T;
@@ -91,8 +92,10 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 												 @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 												 HttpServletRequest req) {
 
-
 		final Map<String, String[]> parameterMap = req.getParameterMap();
+		if(parameterMap.get("rwlx")==null || !parameterMap.get("rwlx")[0].toString().equals("cx")){
+			return Result.OK(new PageDTO());
+		}
 		final String o = JSON.toJSONString(parameterMap);
 
 		final QueryWrapper<BizPhone> queryWrapper = BizPhoneServiceImpl.buildQwWhenExport(parameterMap);
@@ -130,6 +133,9 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
 		final Map<String, String[]> parameterMap = req.getParameterMap();
+		if(parameterMap.get("rwlx")==null || !parameterMap.get("rwlx")[0].toString().equals("cx")){
+			return Result.OK(new PageDTO());
+		}
 		final String provinceCode = bizPhone.getProvinceCode();
 		bizPhone.setProvinceCode("");
 		QueryWrapper<BizPhone> queryWrapper = QueryGenerator.initQueryWrapper(bizPhone, parameterMap);

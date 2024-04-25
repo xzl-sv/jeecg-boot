@@ -9,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import org.jeecg.common.api.vo.Result;
 import org.jeecg.common.system.query.QueryGenerator;
 import org.jeecg.common.util.oConvertUtils;
@@ -71,6 +73,10 @@ public class  BizImportBatchController extends JeecgController<BizImportBatch, I
 								   @RequestParam(name="pageNo", defaultValue="1") Integer pageNo,
 								   @RequestParam(name="pageSize", defaultValue="10") Integer pageSize,
 								   HttpServletRequest req) {
+		final Map<String, String[]> parameterMap = req.getParameterMap();
+		if(parameterMap.get("rwlx")==null || !parameterMap.get("rwlx")[0].toString().equals("cx")){
+			return Result.OK(new PageDTO());
+		}
 		QueryWrapper<BizImportBatch> queryWrapper = QueryGenerator.initQueryWrapper(bizImportBatch, req.getParameterMap());
 		Page<BizImportBatch> page = new Page<BizImportBatch>(pageNo, pageSize);
 		IPage<BizImportBatch> pageList = bizImportBatchService.page(page, queryWrapper);
