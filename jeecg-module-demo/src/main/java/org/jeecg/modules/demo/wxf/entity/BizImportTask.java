@@ -112,7 +112,7 @@ public class BizImportTask implements Serializable {
         if(filePath==null){
             return "";
         }
-        return filePath.replaceAll("####","").replaceAll("@@@","");
+        return filePath.replaceAll("####","/").replaceAll("@@@","");
     }
 
     public List<String> multiFilePath(){

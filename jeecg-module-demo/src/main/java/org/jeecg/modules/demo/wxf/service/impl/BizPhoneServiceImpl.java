@@ -559,7 +559,8 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
             importTask.setTaskSummary(JSON.toJSONString(importSummary));
             importTask.setMsg(sw.prettyPrint(TimeUnit.SECONDS));
             try {
-                inputstream.close();
+                if(inputstream!=null)
+                    inputstream.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
