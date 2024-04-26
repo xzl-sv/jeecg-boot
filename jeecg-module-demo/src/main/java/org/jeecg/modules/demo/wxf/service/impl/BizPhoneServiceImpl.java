@@ -206,8 +206,14 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
         final MultiValueMap<String, MultipartFile> multiFileMap = multipartRequest.getMultiFileMap();
 
+
+        final String[] bnArr = request.getParameterMap().get("batchNo");
+        String batchno = BatchNoUtil.generate();
+        if(bnArr!=null && bnArr.length>0&& bnArr[0].trim().length()>0){
+            batchno=bnArr[0].trim();
+        }
+
         //一个文件一个批次
-        final String batchno = BatchNoUtil.generate();
         String dir ="";
         String files="";
         for (Map.Entry<String, List<MultipartFile>> entity : multiFileMap.entrySet()) {

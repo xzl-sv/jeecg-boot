@@ -93,7 +93,11 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 												 HttpServletRequest req) {
 
 		final Map<String, String[]> parameterMap = req.getParameterMap();
-		if(parameterMap.get("rwlx")==null || !parameterMap.get("rwlx")[0].toString().equals("cx")){
+		final String[] rwlxes = parameterMap.get("rwlx");
+
+		if(rwlxes==null
+				|| rwlxes.length==0
+				|| (rwlxes[0].toString().equals("cx") && rwlxes[0].toString().equals("tj"))){
 			return Result.OK(new PageDTO());
 		}
 		final String o = JSON.toJSONString(parameterMap);
@@ -105,7 +109,6 @@ public class BizPhoneController extends JeecgController<BizPhone, IBizPhoneServi
 
 
 
-		final String[] rwlxes = parameterMap.get("rwlx");
 		if(rwlxes!=null && rwlxes.length>0 && rwlxes[0].equalsIgnoreCase("tj")){
 			//选择了提交取数操作
 			bizPhoneService.submitExportTask(BizExportRecord.class,o);
