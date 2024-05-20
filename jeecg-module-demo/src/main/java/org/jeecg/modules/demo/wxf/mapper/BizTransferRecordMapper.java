@@ -21,7 +21,11 @@ public interface BizTransferRecordMapper extends BaseMapper<BizTransferRecord> {
             "            where r.transfer_num=rt.transfer_num  and ( r.transfer_status<>rt.transfer_status or r.price<>rt.price or r.sign_time<>rt.sign_time  or r.transfer_comp<>rt.transfer_comp)")
     public List<BizTransferRecord> findTransferStatusToBeUpdate();
 
-    @Update("update biz_transfer_record t,biz_transfer_record_tmp tmp set t.price=tmp.price,t.transfer_comp=tmp.transfer_comp,t.transfer_status=tmp.transfer_status,t.bz=tmp.bz,t.sign_time=tmp.sign_time  where t.transfer_num=tmp.transfer_num")
+    @Update("update biz_transfer_record t,biz_transfer_record_tmp tmp " +
+            "set t.price=tmp.price,t.transfer_comp=tmp.transfer_comp" +
+            ",t.transfer_status=tmp.transfer_status,t.bz=tmp.bz" +
+            ",t.sign_time=tmp.sign_time  " +
+            "where  t.transfer_num=tmp.transfer_num")
     void updateTransferFromTransferTmp();
 
 

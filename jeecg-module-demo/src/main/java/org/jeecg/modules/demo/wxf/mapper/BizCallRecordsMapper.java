@@ -58,22 +58,23 @@ public interface BizCallRecordsMapper extends BaseMapper<BizCallRecords> {
      */
     @Update("update biz_phone pp ,( " +
             "select cr.phone phone ,count(*) on_count ,max(cr.call_time) last_on_call_time from " +
-            " biz_call_records cr  where cr.call_duration>0 group by cr.phone ) t " +
+            " biz_call_records cr   where batch_no=#{batchNo,jdbcType=VARCHAR} and  cr.call_duration>0 group by cr.phone ) t " +
             "set pp.on_count=t.on_count,pp.recent_on_time=t.last_on_call_time " +
             "where pp.phone=t.phone")
-    void updateOnCallTimeAndCnt();
+    void updateOnCallTimeAndCnt(@Param("batchNo")String batchNo);
 
     /**
      * 接通总次数
      */
     @Update("update biz_phone pp ,( " +
             "select cr.phone phone ,count(*) total_count   from " +
-            " biz_call_records cr    group by cr.phone ) t " +
+            " biz_call_records cr where batch_no=#{batchNo,jdbcType=VARCHAR}     group by cr.phone ) t " +
             "set pp.total_count=t.total_count " +
             "where pp.phone=t.phone")
-    void updateTotalCall();
+    void updateTotalCall(@Param("batchNo")String batchNo);
 
     /**
+     * [2024-05-20 22:39:35] 2,109,264 rows affected in 1 m 8 s 716 ms
      * 接通率
      */
     @Update("update biz_phone set on_rate=on_count/total_count where total_count>0 ")

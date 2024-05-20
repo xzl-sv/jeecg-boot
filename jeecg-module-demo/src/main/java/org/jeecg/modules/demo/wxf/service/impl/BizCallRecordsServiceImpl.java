@@ -32,9 +32,10 @@ public class BizCallRecordsServiceImpl extends ServiceImpl<BizCallRecordsMapper,
         callRecordsMapper.updateCgStatus(batchNo);
         callRecordsMapper.updateAddressStatus(batchNo);
         callRecordsMapper.updateClientName(batchNo);
-        callRecordsMapper.updateTotalCall();
-        callRecordsMapper.updateOnCallTimeAndCnt();
-        callRecordsMapper.updateOnrate();
+        callRecordsMapper.updateTotalCall(batchNo);
+        callRecordsMapper.updateOnCallTimeAndCnt(batchNo);
+        //[2024-05-20 22:39:35] 2,109,264 rows affected in 1 m 8 s 716 ms
+//        callRecordsMapper.updateOnrate();
 
     }
 }
