@@ -18,6 +18,7 @@ package org.jeecgframework.poi.excel.imports;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.jeecgframework.poi.excel.entity.params.ExcelImportEntity;
 import org.jeecgframework.poi.excel.entity.sax.SaxReadCellEntity;
 import org.jeecgframework.poi.exception.excel.ExcelImportException;
@@ -90,6 +91,13 @@ public class CellValueServer {
             //stripTrailingZeros方法去除末尾的0，toPlainString避免输出科学计数法的字符串
             result = bigDecimal.stripTrailingZeros().toPlainString();
             //---author:liusq---date:20221102-----for:[issues/3369] Excel导入 带公式的时候精度丢失---
+        } else if ( CellType.ERROR == cell.getCellTypeEnum()) {
+            if (cell instanceof XSSFCell) {
+                XSSFCell xs = (XSSFCell) cell;
+                result = xs.getErrorCellString();
+            }else{
+                result = ""+cell.getErrorCellValue();
+            }
         } else {
             //设置单元格类型
 //            cell.setCellType(CellType.STRING);
