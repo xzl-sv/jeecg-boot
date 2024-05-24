@@ -106,4 +106,27 @@ public class BizTransferRecord implements Serializable {
     @Excel(name = "备注", width = 200)
     @ApiModelProperty(value = "备注")
     private java.lang.String bz;
+
+
+    /**寄件人*/
+    @Excel(name = "寄件人", width = 200)
+    @ApiModelProperty(value = "寄件人")
+    private java.lang.String senderName;
+
+    /**原始代收金额*/
+    @Excel(name = "原始代收金额", width = 200)
+    @ApiModelProperty(value = "原始代收金额")
+    private java.lang.String ysdsje;
+    /**改价金额*/
+    @Excel(name = "改价金额", width = 200)
+    @ApiModelProperty(value = "改价金额")
+    private java.lang.String gjje;
+    /**买家留言*/
+    @Excel(name = "买家留言", width = 200)
+    @ApiModelProperty(value = "买家留言")
+    private java.lang.String mjly;
+    /**最新路由信息*/
+    @Excel(name = "最新路由信息", width = 200)
+    @ApiModelProperty(value = "最新路由信息")
+    private java.lang.String zxlyxz;
 }
