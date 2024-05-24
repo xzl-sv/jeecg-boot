@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -811,7 +812,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 //        final Class<?> pojoClass = pageData.getRecords().get(0).getClass();
 
         //获取文件名
-        final String filePath = generateFileName(BizPhone.class);
+        final String excelFilePath = generateFileName(BizPhone.class);
 
 
         sw.stop();
@@ -837,7 +838,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         sw.stop();
 
         try {
-            out = new FileOutputStream(new File(filePath));
+            out = new FileOutputStream(new File(excelFilePath));
             final int listSize = totalData.size();
             //更新最近提取时间
             final List<String> idsToBeUpdate = totalData.stream().map(p -> p.getId()).collect(Collectors.toList());
@@ -859,20 +860,26 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
             sw.stop();
 //            this.updateBatchById(toBeUpdateExportTime);
-            importTask.setFilePath(filePath);
+            importTask.setFilePath(excelFilePath);
             QueryWrapper<BizExportRecord> p = new QueryWrapper<>();
             p.eq("batch_no",importTask.getBatchNo());
             BizExportRecord one = exportRecordService.getOne(p, false);
             if(one==null){
                 one = new BizExportRecord();
             }
+
+            final String csvFile = generateFileName(BizPhone.class, "csv");
+            convertExcelToCsv(excelFilePath,csvFile);
             one.setSize(listSize);
-            one.setFileAddress(filePath);
+
+            one.setFileAddress(csvFile);
             one.setExportTime(new Date());
             one.setBatchNo(importTask.getBatchNo());
             exportRecordService.saveOrUpdate(one);
 
             log.info(sw.prettyPrint(TimeUnit.SECONDS));
+
+
         } catch (Exception e) {
             e.printStackTrace();
             taskStatus = TASK_STATUS_ERROR;
@@ -920,6 +927,57 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
     }
 
+    public void convertExcelToCsv(String xlsxFile,String csv){
+        // 加载Excel文件
+
+        Workbook workbook=null;
+        CSVWriter csvWriter=null;
+
+        try {
+            workbook = WorkbookFactory.create(new File(xlsxFile));
+            // 创建CSV文件
+            String csvFilePath = new File(xlsxFile).getParentFile().getAbsolutePath();
+            FileWriter fw = new FileWriter(csv);
+            csvWriter = new CSVWriter(fw);
+
+            // 获取第一个Sheet
+            final Iterator<Sheet> si = workbook.sheetIterator();
+            while(si.hasNext()){
+                final Sheet next = si.next();
+                // 遍历每一行
+                for (Row row : next) {
+                    // 遍历每个单元格
+
+                    // 创建一个String数组来存储每一行的数据
+                    String[] rowData = new String[row.getLastCellNum()];
+
+                    // 遍历每个单元格
+                    for (Cell cell : row) {
+                        // 将单元格数据添加到数组中
+                        rowData[cell.getColumnIndex()] = cell.getStringCellValue();
+                    }
+                    // 写入数组数据到CSV文件
+                    csvWriter.writeNext(rowData);
+                }
+
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if(workbook!=null){
+                    workbook.close();
+                }
+                if(csvWriter!=null){
+                    csvWriter.close();;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private static int calTqsl(Map<String, String[]> param, int dbTotal) {
         int tqsl = DEFAULT_EXPORT_SIZE;
         if(param.get("tqsl")!=null && StringUtils.isNotBlank(((String[]) param.get("tqsl"))[0])) {
@@ -934,9 +992,14 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
 
     @NotNull
     private String generateFileName(Class<?> pojoClass) {
+        return generateFileName(pojoClass,"xlsx");
+    }
+
+
+    private String generateFileName(Class<?> pojoClass,String fileType) {
         String dir = PoiPublicUtil.getWebRootPath(getSaveExcelUrl(pojoClass, "download/excelDownload"));
         SimpleDateFormat format = new SimpleDateFormat("yyyMMddHHmmss");
-        final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +".xlsx";
+        final String filePath = dir + "/" + format.format(new Date()) + "_" + Math.round(Math.random() * 100000) +"."+fileType;
         autoCreateDirAndFile(new File(filePath));
         return filePath;
     }

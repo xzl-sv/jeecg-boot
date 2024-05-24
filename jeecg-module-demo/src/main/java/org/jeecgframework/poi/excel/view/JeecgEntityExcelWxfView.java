@@ -44,7 +44,7 @@ public class JeecgEntityExcelWxfView  extends MiniAbstractExcelView {
     @Override
     protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
         String codedFileName = "临时文件";
-        Workbook workbook = null;
+//        Workbook workbook = null;
         String[] exportFields = null;
         Object exportFieldStr = model.get("exportFields");
         if (exportFieldStr != null && exportFieldStr != "") {
@@ -59,7 +59,19 @@ public class JeecgEntityExcelWxfView  extends MiniAbstractExcelView {
         if(StringUtils.isBlank(record.getFileAddress())){
             return ;
         }
-        workbook =  new XSSFWorkbook(new FileInputStream(new File(record.getFileAddress())));
+        final FileInputStream is = new FileInputStream(new File(record.getFileAddress()));
+
+
+
+
+
+
+
+
+
+
+
+//        workbook =  new XSSFWorkbook(is);
 
         if (model.containsKey("fileName")) {
             codedFileName = (String)model.get("fileName");
@@ -75,7 +87,15 @@ public class JeecgEntityExcelWxfView  extends MiniAbstractExcelView {
 
         response.setHeader("content-disposition", "attachment;filename=" + codedFileName);
         ServletOutputStream out = response.getOutputStream();
-        workbook.write(out);
+
+        int len = 0;
+        byte[] buffer = new byte[1024];
+        while ((len = is.read(buffer)) > 0) {
+            out.write(buffer, 0, len);
+        }
+
+
+
         out.flush();
     }
 

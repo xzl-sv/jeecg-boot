@@ -25,6 +25,12 @@
             <groupId>org.jeecgframework.boot</groupId>
             <artifactId>jeecg-system-biz</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.aspose</groupId>-->
+<!--            <artifactId>aspose-cells</artifactId>-->
+<!--            <version>22.6</version>-->
+<!--        </dependency>-->
+
     </dependencies>
 
 </project>
