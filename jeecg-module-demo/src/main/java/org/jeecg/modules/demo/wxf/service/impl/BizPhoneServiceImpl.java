@@ -123,6 +123,7 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         final String absolutePath = file.getAbsolutePath();
         log.info("文件成功缓存到：{}", absolutePath);
         if(absolutePath.toLowerCase().endsWith("csv")){
+
             final File newExcelFileFromCsv = convertCsvToExcel(file);
             log.info("csv 文件转换成功：{}",newExcelFileFromCsv.getAbsolutePath());
             return newExcelFileFromCsv;
@@ -132,13 +133,37 @@ public class BizPhoneServiceImpl extends ServiceImpl<BizPhoneMapper, BizPhone> i
         return file;
     }
 
+    public static String getFileEncoding(String filePath) throws IOException {
+        FileInputStream fis = new FileInputStream(filePath);
+
+        byte[] buffer = new byte[3];
+        fis.read(buffer);
+
+        fis.close();
+
+        if (buffer[0] == (byte) 0xEF && buffer[1] == (byte) 0xBB && buffer[2] == (byte) 0xBF) {
+            return "UTF-8";
+        } else if (buffer[0] == (byte) 0xFE && buffer[1] == (byte) 0xFF) {
+            return "UTF-16BE";
+        } else if (buffer[0] == (byte) 0xFF && buffer[1] == (byte) 0xFE) {
+            return "UTF-16LE";
+        } else {
+            return "GBK";
+        }
+    }
+
 
     public static File convertCsvToExcel(File csvFile) {
         final String newFileName = csvFile.getParentFile().getAbsolutePath() + File.separator + csvFile.getName().split("\\.")[0] + ".XLSX";
         try {
+            final String fileEncoding = getFileEncoding(csvFile.getCanonicalPath());
             //创建SXSSFWorkbook对象，参数表示要保持在内存中的行数
             XSSFWorkbook workbook = new XSSFWorkbook();
-            CSVReader reader = new CSVReader(new FileReader(csvFile.getCanonicalPath()));
+            final InputStreamReader isr = new InputStreamReader(new FileInputStream(csvFile.getCanonicalPath()), fileEncoding);
+            final BufferedReader br = new BufferedReader(isr);
+            //2024-05-26 23:17:42 历史版本，仅支持utf8格式
+//            final FileReader fr = new FileReader(csvFile.getCanonicalPath());
+            CSVReader reader = new CSVReader(br);
             Sheet sheet = workbook.createSheet("Sheet1");
             XSSFCellStyle strCellStyle= workbook.createCellStyle();
             //CellType.STRING，里面写着1就是String格式
